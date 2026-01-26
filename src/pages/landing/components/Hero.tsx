@@ -2,34 +2,30 @@ import React from 'react';
 
 export const Hero = () => {
   return (
-    <section className="relative pt-16 pb-20 lg:pt-24 lg:pb-28 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-          <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-300 text-sm font-semibold mb-6 border border-blue-100 dark:border-blue-800">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-              </span>
-              #1 Trusted Real Estate Platform in Lagos
-            </div>
-            <h1 className="text-5xl lg:text-6xl font-display font-bold text-gray-900 dark:text-white leading-tight mb-6">
-              Find the Right Home in <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-600">Nigeria</span> — <br />Without Stress
+    <section className="relative pt-4 pb-12 lg:pt-10 lg:pb-24 overflow-hidden md:bg-none bg-[url('/hero-bg.jpg')] bg-cover bg-center">
+      {/* Mobile Overlay */}
+      <div className="absolute inset-0 bg-black/60 md:hidden z-0"></div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-8 items-center">
+          <div className="relative z-10 max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-white md:text-gray-900 dark:text-white leading-tight mb-4 md:mb-6">
+              Find the Right Home in <span className="text-blue-300 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-green-500 md:to-blue-600">Nigeria</span><br className="hidden md:block" /> Without Stress
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 leading-relaxed">
+            <p className="text-sm md:text-lg text-gray-200 md:text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
               Discover properties that match your lifestyle and budget. From Lekki to Abuja, we use smart data to verify every listing so you can move with peace of mind.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-blue-600/20 transition-all transform hover:-translate-y-1">
-                <span className="material-symbols-outlined">search</span>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+              <button className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold text-base shadow-xl shadow-blue-600/20 transition-all transform hover:-translate-y-1">
+                <span className="material-symbols-outlined text-xl">search</span>
                 Find a Home
               </button>
-              <button className="flex items-center justify-center gap-2 bg-white dark:bg-surface-dark text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary px-8 py-4 rounded-xl font-bold text-lg shadow-sm transition-all hover:bg-gray-50 dark:hover:bg-gray-800">
-                <span className="material-symbols-outlined">add_home_work</span>
+              <button className="flex items-center justify-center gap-2 bg-white/10 md:bg-white dark:bg-surface-dark text-white md:text-gray-800 dark:text-white border border-white/20 md:border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary px-6 py-3 rounded-xl font-bold text-base shadow-sm transition-all hover:bg-white/20 md:hover:bg-gray-50 dark:hover:bg-gray-800 backdrop-blur-sm md:backdrop-blur-none">
+                <span className="material-symbols-outlined text-xl">add_home_work</span>
                 List a Property
               </button>
             </div>
-            <div className="mt-10 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+            <div className="mt-8 flex items-center justify-center lg:justify-start gap-4 text-xs md:text-sm text-gray-300 md:text-gray-500 dark:text-gray-400">
               <div className="flex -space-x-2">
                 <img alt="User" className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZPlSdSkOshAEPb1B-RE7amugZ195Zi55gSah3exo1TUuvQjggMYAMrIlLvrcIOllOJkVGPBEm31cgL27InUyYf4detDJThjr2g7TnMUSv02a0xvHRuPqC7dtjwky37IvfDPEXcQ9RfDePkRms4xcXnNldaG6Db7LNSD356359Mtujj5-IYjYfvQQpo2Z1i71X_f7mbg4fWe_iz4GdjNj4WE6h3R7FVcujOk_i4cEW4DurZSixFj1aEwcRJmh-s6fUuY4x5C8rRieo" />
                 <img alt="User" className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBP7WJzsHrtLzeIehrPRqqw4lQs5iZXDUQvlFcnVSuDe3Ep-HS3H6kKRGcdGksDdzsNwNdkdbG8p4ZzExpvMwTML4M9affAOH-H2BiwUyyn6hwszByRuRWg9IxvJ-M7rFCcUU_GWWaphImCfmS_IfYp8AksBDOWkHO8WFJ85RSMuqCpxMqCH3gqdwLXqSM9YY5LL2pte5R7wTs2x4kW1NRJCvMLDsTRrY1UcWjP6rlmPWo2eoCXApn4cRn0lFUQoIIR3Qc19cE41E3D" />

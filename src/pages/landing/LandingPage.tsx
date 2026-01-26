@@ -8,6 +8,7 @@ import { HowItWorks } from './components/HowItWorks';
 import { FeaturedListings } from './components/FeaturedListings';
 import { CallToAction } from './components/CallToAction';
 import { Testimonials } from './components/Testimonials';
+import { RevealOnScroll } from '../../components/common/RevealOnScroll';
 
 export const LandingPage = () => {
   return (
@@ -15,12 +16,24 @@ export const LandingPage = () => {
       <Navbar />
       <main>
         <Hero />
-        <SearchSection />
-        <Features />
-        <HowItWorks />
-        <FeaturedListings />
-        <CallToAction />
-        <Testimonials />
+        <RevealOnScroll>
+          <SearchSection />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <Features />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <HowItWorks />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <FeaturedListings />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <CallToAction />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <Testimonials />
+        </RevealOnScroll>
       </main>
       <Footer />
     </div>

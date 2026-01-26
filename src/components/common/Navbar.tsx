@@ -11,7 +11,7 @@ export const Navbar = () => {
                 <img 
                   alt="EasyBuy Logo" 
                   className="h-full w-full object-contain" 
-                  src="/logo.png" 
+                  src="/icon.png" 
                 />
               </div>
               <span className="font-display font-bold text-2xl text-navy dark:text-blue-400 tracking-tight">
@@ -20,10 +20,10 @@ export const Navbar = () => {
             </div>
           </div>
           <div className="hidden md:flex items-center space-x-8">
-            <a className="text-gray-600 dark:text-gray-300 hover:text-primary font-medium transition" href="#">Buy</a>
-            <a className="text-gray-600 dark:text-gray-300 hover:text-primary font-medium transition" href="#">Rent</a>
-            <a className="text-gray-600 dark:text-gray-300 hover:text-primary font-medium transition" href="#">Short Let</a>
-            <a className="text-gray-600 dark:text-gray-300 hover:text-primary font-medium transition" href="#">Agents</a>
+            <a className="text-gray-900 font-semibold border-b-2 border-primary" href="#">Home</a>
+            <a className="text-gray-600 dark:text-gray-300 hover:text-primary font-medium transition" href="#how-it-works">How it Works</a>
+            <a className="text-gray-600 dark:text-gray-300 hover:text-primary font-medium transition" href="#featured">Properties</a>
+            <a className="text-gray-600 dark:text-gray-300 hover:text-primary font-medium transition" href="#testimonials">Reviews</a>
           </div>
           <div className="hidden md:flex items-center space-x-4">
             <button className="text-gray-900 dark:text-white font-medium hover:text-primary transition">Log In</button>
@@ -33,8 +33,8 @@ export const Navbar = () => {
             {/* Dark mode toggle removed as requested */}
           </div>
           <div className="md:hidden flex items-center">
-            <button className="text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-2">
-              <span className="material-symbols-outlined text-3xl">menu</span>
+            <button className="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md transition-all">
+              Join Now
             </button>
           </div>
         </div>

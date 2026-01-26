@@ -11,7 +11,7 @@ export const Footer = () => {
                 <img 
                   alt="EasyBuy Logo" 
                   className="h-full w-full object-contain" 
-                  src="/logo.png" 
+                  src="/icon.png" 
                 />
               </div>
               <span className="font-display font-bold text-xl text-navy dark:text-blue-400">
