@@ -165,7 +165,7 @@ export const LandlordSidebar = () => {
                             <div key={item.label} className="relative">
                                 {/* Vertical Menu for Subitems */}
                                 {mobileSettingsOpen && (
-                                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col gap-1 bg-white dark:bg-surface-dark rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-2 min-w-[120px] animate-fade-in-up">
+                                    <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 flex flex-col gap-1 bg-white dark:bg-surface-dark rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-2 min-w-[120px] animate-fade-in-up">
                                         {item.children.map(child => (
                                             <NavLink 
                                                 key={child.label}

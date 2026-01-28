@@ -67,9 +67,10 @@ export const Sidebar = () => {
                                             // Calculate Arc Position (Simple fan out for clean UI)
                                             // Using absolute positioning to create an 'arc' effect relative to the center button
                                             const angle = -45 + (index * 45); // -45, 0, +45 degrees
-                                            const radius = 80;
+                                            const radius = 55;
                                             const x = Math.sin(angle * (Math.PI / 180)) * radius;
-                                            const y = -Math.cos(angle * (Math.PI / 180)) * radius + 20; // +20 to adjust closer to button
+                                            const y = -Math.cos(angle * (Math.PI / 180)) * radius + 10;
+ // +20 to adjust closer to button
                                             
                                             // Simplified approach: Stack vertical for better UX on small screens, or true Arc as requested
                                             // Let's implement a nice Fan/Arc pop-up

@@ -3,20 +3,20 @@ import { Link } from 'react-router-dom';
 
 export const Hero = () => {
   return (
-    <section className="relative pt-2 pb-12 lg:pt-8 lg:pb-24 overflow-hidden md:bg-none bg-[url('/hero-bg.jpg')] bg-cover bg-center">
+    <section className="relative pt-20 pb-16 lg:pt-8 lg:pb-24 overflow-hidden md:bg-none bg-[url('/hero-bg.jpg')] bg-cover bg-center">
       {/* Mobile Overlay */}
       <div className="absolute inset-0 bg-black/60 md:hidden z-0"></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-8 items-center">
           <div className="relative z-10 max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-white md:text-gray-900 dark:text-white leading-tight mb-4 md:mb-6">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-white md:text-gray-900 dark:text-white leading-tight mb-6 md:mb-6">
               Find the Right Home in <span className="text-blue-300 md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-green-500 md:to-blue-600">Nigeria</span><br className="hidden md:block" /> Without Stress
             </h1>
-            <p className="text-sm md:text-lg text-gray-200 md:text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+            <p className="text-sm md:text-lg text-gray-200 md:text-gray-600 dark:text-gray-300 mb-10 leading-relaxed max-w-lg mx-auto lg:mx-0">
               Discover properties that match your lifestyle and budget. From Lekki to Abuja, we use smart data to verify every listing so you can move with peace of mind.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link to="/#search" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold text-base shadow-xl shadow-blue-600/20 transition-all transform hover:-translate-y-1">
                 <span className="material-symbols-outlined text-xl">search</span>
                 Find a Home
