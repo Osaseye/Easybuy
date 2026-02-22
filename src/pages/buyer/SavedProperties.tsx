@@ -1,65 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../../components/common/Sidebar';
+import { useSavedProperties } from '../../hooks/useData';
 
 export const SavedProperties = () => {
   const navigate = useNavigate();
-  const [selectedForCompare, setSelectedForCompare] = useState<number[]>([]);
+  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
+  const { savedProperties } = useSavedProperties();
 
-  const savedProperties = [
-    {
-      id: 1,
-      image: "/properties/property-1.jpg",
-      title: "Modern 4 Bed Duplex",
-      price: "₦120M",
-      location: "Lekki Phase 1, Lagos",
-      beds: 4,
-      baths: 4,
-      size: "450 sqm",
-      match: 95,
-      type: "For Sale"
-    },
-    {
-      id: 2,
-      image: "/properties/property-2.jpg",
-      title: "Luxury 2 Bed Apartment",
-      price: "₦5M/yr",
-      location: "Victoria Island, Lagos",
-      beds: 2,
-      baths: 2,
-      size: "120 sqm",
-      match: 88,
-      type: "For Rent"
-    },
-    {
-      id: 3,
-      image: "/properties/property-3.jpg",
-      title: "Contemporary Bungalow",
-      price: "₦85M",
-      location: "Maitama, Abuja",
-      beds: 3,
-      baths: 4,
-      size: "300 sqm",
-      match: 92,
-      type: "For Sale"
-    },
-    {
-      id: 4,
-      image: "/properties/property-4.jpg",
-      title: "Classic Semi-Detached",
-      price: "₦90M",
-      location: "Ikeja GRA, Lagos",
-      beds: 4,
-      baths: 4,
-      size: "400 sqm",
-      match: 0,
-      type: "Sold Out",
-      sold: true
-    }
-  ];
-
-  const toggleCompare = (id: number) => {
+  const toggleCompare = (id: string) => {
     if (selectedForCompare.includes(id)) {
       setSelectedForCompare(selectedForCompare.filter(itemId => itemId !== id));
     } else {
@@ -110,7 +60,7 @@ export const SavedProperties = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 bg-white dark:bg-surface-dark p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-            <span className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-0">Showing {savedProperties.length} saved properties</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-0">Showing 0 saved properties</span>
             <div className="flex items-center space-x-4">
                 <div className="relative">
                     <select className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-transparent dark:text-white">
@@ -122,149 +72,13 @@ export const SavedProperties = () => {
             </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {savedProperties.map((property) => (
-                <div key={property.id} onClick={() => navigate(`/property/${property.id}`)} className={`group relative bg-white dark:bg-surface-dark rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border ${selectedForCompare.includes(property.id) ? 'border-primary ring-2 ring-primary ring-opacity-50' : 'border-gray-100 dark:border-gray-700'} overflow-hidden flex flex-col cursor-pointer ${property.sold ? 'opacity-75' : ''}`}>
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                        {property.sold && (
-                            <div className="absolute inset-0 bg-gray-900/50 z-10 flex items-center justify-center">
-                                <span className="bg-red-600 text-white px-4 py-2 font-bold rounded-md transform -rotate-12 border-2 border-white">SOLD OUT</span>
-                            </div>
-                        )}
-                        <img 
-                            alt={property.title} 
-                            className={`object-cover w-full h-full group-hover:scale-105 transition-transform duration-500 ${property.sold ? 'grayscale' : ''}`} 
-                            src={property.image}
-                        />
-                        <div className="absolute top-3 right-3 z-20" onClick={(e) => e.stopPropagation()}>
-                            <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
-                                <span className="material-symbols-outlined text-red-500 text-xl block">favorite</span>
-                            </button>
-                        </div>
-                        <div className="absolute bottom-3 left-3 z-20">
-                            <span className={`px-2 py-1 text-white text-xs font-semibold rounded-md ${property.type === 'For Rent' ? 'bg-blue-600' : 'bg-green-600'}`}>
-                                {property.type === 'Sold Out' ? 'Sold' : property.type}
-                            </span>
-                        </div>
-                        
-                        {/* Compare Checkbox Overlay */}
-                        {!property.sold && (
-                            <div className="absolute top-3 left-3 z-20" onClick={(e) => e.stopPropagation()}>
-                                <label className="flex items-center space-x-2 cursor-pointer bg-black/50 backdrop-blur-sm px-2 py-1 rounded-lg hover:bg-black/70 transition">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={selectedForCompare.includes(property.id)}
-                                        onChange={() => toggleCompare(property.id)}
-                                        className="rounded text-primary focus:ring-primary border-gray-300"
-                                    />
-                                    <span className="text-white text-xs font-medium">Compare</span>
-                                </label>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="p-4 flex flex-col flex-1">
-                        <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">{property.title}</h3>
-                            <p className={`${property.sold ? 'text-gray-500 line-through' : 'text-primary'} font-bold`}>{property.price}</p>
-                        </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center mb-3">
-                            <span className="material-symbols-outlined text-base mr-1">location_on</span>
-                            {property.location}
-                        </p>
-                        <div className="flex items-center gap-4 mb-4 text-xs text-gray-500 dark:text-gray-400">
-                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">bed</span> {property.beds} Beds</span>
-                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">bathtub</span> {property.baths} Baths</span>
-                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">square_foot</span> {property.size}</span>
-                        </div>
-                        <div className="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                            {property.match > 0 ? (
-                                <span className="text-xs text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">{property.match}% Match</span>
-                            ) : (
-                                <span className="text-xs text-gray-500 font-medium">No longer available</span>
-                            )}
-                            <button className={`text-sm font-medium ${property.sold ? 'text-gray-400 cursor-not-allowed' : 'text-primary hover:text-blue-700'}`}>
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ))}
-        </div>
-
-        {/* Comparison Modal */}
-        {showCompareModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white dark:bg-surface-dark z-10">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Property Comparison</h3>
-                        <button onClick={() => setShowCompareModal(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-200">
-                            <span className="material-symbols-outlined">close</span>
-                        </button>
-                    </div>
-                    <div className="p-6 grid grid-cols-2 gap-8">
-                        {getCompareProperties().map(p => (
-                            <div key={p.id} className="space-y-4">
-                                <div className="aspect-video rounded-xl overflow-hidden">
-                                    <img src={p.image} alt={p.title} className="w-full h-full object-cover" />
-                                </div>
-                                <div>
-                                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">{p.title}</h4>
-                                    <p className="text-primary font-bold text-xl">{p.price}</p>
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                                        <span className="text-gray-500 dark:text-gray-400">Location</span>
-                                        <span className="font-medium text-gray-900 dark:text-white text-right">{p.location}</span>
-                                    </div>
-                                    <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                                        <span className="text-gray-500 dark:text-gray-400">Bedrooms</span>
-                                        <span className="font-medium text-gray-900 dark:text-white">{p.beds}</span>
-                                    </div>
-                                    <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                                        <span className="text-gray-500 dark:text-gray-400">Bathrooms</span>
-                                        <span className="font-medium text-gray-900 dark:text-white">{p.baths}</span>
-                                    </div>
-                                    <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                                        <span className="text-gray-500 dark:text-gray-400">Size</span>
-                                        <span className="font-medium text-gray-900 dark:text-white">{p.size}</span>
-                                    </div>
-                                     <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                                        <span className="text-gray-500 dark:text-gray-400">Match Score</span>
-                                        <span className="font-bold text-green-600">{p.match}%</span>
-                                    </div>
-                                </div>
-                                <button className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-blue-700 transition">
-                                    Contact Agent
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        )}
-
-        <div className="mt-16">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Because you liked these...</h3>
-                <a className="text-primary hover:text-blue-700 dark:hover:text-blue-400 text-sm font-medium flex items-center" href="/explore">
-                    See All Recommended <span className="material-symbols-outlined text-sm ml-1">arrow_forward</span>
-                </a>
-            </div>
-            <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-2xl p-8 text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-10 blur-2xl"></div>
-                <div className="relative z-10 md:flex items-center justify-between">
-                    <div className="mb-6 md:mb-0 md:w-2/3">
-                        <h4 className="text-2xl font-bold mb-2">We found 12 new properties matching your style!</h4>
-                        <p className="text-blue-100">Based on your saved properties in Lekki and Victoria Island, our AI has curated a list just for you.</p>
-                    </div>
-                    <div>
-                        <button className="bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-6 rounded-lg shadow-lg transition-transform hover:-translate-y-1">
-                            View Recommendations
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <div className="w-full bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
+            <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">favorite_border</span>
+            <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No saved properties yet</h4>
+            <p className="text-gray-500 dark:text-gray-400 max-w-md mb-6">Properties you save will appear here so you can easily find them later.</p>
+            <button onClick={() => navigate('/explore')} className="bg-primary hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold transition-colors">
+                Explore Properties
+            </button>
         </div>
       </main>
     </div>

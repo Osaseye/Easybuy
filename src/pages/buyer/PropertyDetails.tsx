@@ -1,9 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { Sidebar } from '../../components/common/Sidebar';
 import { ReviewModal } from '../../components/common/ReviewModal';
+import { LoadingState } from '../../components/common/LoadingState';
+import { useProperties } from '../../hooks/useProperties';
+import type { Property } from '../../types';
 
 export const PropertyDetails = () => {
+  const { id } = useParams();
+  const { properties, loading } = useProperties();
+  const [property, setProperty] = useState<Property | null>(null);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
+
+  useEffect(() => {
+    if (properties.length > 0 && id) {
+      const found = properties.find(p => p.id === id);
+      setProperty(found || null);
+    }
+  }, [properties, id]);
+
+  if (loading) return (
+    <div className="bg-background-light dark:bg-background-dark font-sans text-gray-800 dark:text-gray-100 transition-colors duration-300 antialiased min-h-screen flex flex-col md:flex-row">
+      <Sidebar />
+      <main className="flex-1 p-4 pt-24 md:p-8 overflow-y-auto h-screen pb-24 md:pb-8 flex items-center justify-center">
+        <LoadingState />
+      </main>
+    </div>
+  );
+  
+  if (!property) return (
+    <div className="bg-background-light dark:bg-background-dark font-sans text-gray-800 dark:text-gray-100 transition-colors duration-300 antialiased min-h-screen flex flex-col md:flex-row">
+      <Sidebar />
+      <main className="flex-1 p-4 pt-24 md:p-8 overflow-y-auto h-screen pb-24 md:pb-8 flex items-center justify-center">
+        <div className="text-center">
+          <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Property not found</h2>
+          <p className="text-gray-500 dark:text-gray-400">The property you are looking for does not exist or has been removed.</p>
+        </div>
+      </main>
+    </div>
+  );
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-sans text-gray-800 dark:text-gray-100 transition-colors duration-300 antialiased min-h-screen flex flex-col md:flex-row">
@@ -29,7 +65,7 @@ export const PropertyDetails = () => {
             <li>
               <div className="flex items-center">
                 <span className="material-symbols-outlined text-gray-300 text-sm flex-shrink-0">chevron_right</span>
-                <span aria-current="page" className="ml-4 text-sm font-medium text-gray-500 dark:text-gray-400">Luxury Duplex in Bodija</span>
+                <span aria-current="page" className="ml-4 text-sm font-medium text-gray-500 dark:text-gray-400">{property.title}</span>
               </div>
             </li>
           </ol>
@@ -41,9 +77,9 @@ export const PropertyDetails = () => {
             {/* Image Gallery */}
             <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
               <div className="relative h-[400px] w-full">
-                <img alt="Modern Duplex in Ibadan" className="w-full h-full object-cover" src="/properties/property-1.jpg" />
+                <img alt={property.title} className="w-full h-full object-cover" src={property.images[0]} />
                 <span className="absolute top-4 left-4 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide shadow-md">
-                  For Sale
+                  For {property.type}
                 </span>
                 <button className="absolute bottom-4 right-4 bg-white/90 dark:bg-black/70 backdrop-blur text-gray-800 dark:text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2 hover:bg-white dark:hover:bg-black transition-colors">
                   <span className="material-symbols-outlined text-sm">grid_view</span>
@@ -51,21 +87,15 @@ export const PropertyDetails = () => {
                 </button>
               </div>
               <div className="grid grid-cols-4 gap-2 p-2 bg-gray-50 dark:bg-gray-800/50">
-                <div className="h-24 rounded-lg overflow-hidden cursor-pointer ring-2 ring-primary ring-offset-2 dark:ring-offset-surface-dark">
-                  <img alt="Exterior View" className="w-full h-full object-cover" src="/properties/property-1.jpg" />
-                </div>
-                <div className="h-24 rounded-lg overflow-hidden cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
-                  <img alt="Living Room" className="w-full h-full object-cover" src="/properties/property-2.jpg" />
-                </div>
-                <div className="h-24 rounded-lg overflow-hidden cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
-                  <img alt="Kitchen" className="w-full h-full object-cover" src="/properties/property-9.jpg" />
-                </div>
-                <div className="h-24 rounded-lg overflow-hidden cursor-pointer opacity-70 hover:opacity-100 transition-opacity relative">
-                  <img alt="Bedroom" className="w-full h-full object-cover" src="/properties/property-10.jpg" />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-semibold text-lg">
-                    +8
-                  </div>
-                </div>
+                 {property.images.slice(0, 4).map((img, idx) => (
+                    <div key={idx} className="h-24 rounded-lg overflow-hidden cursor-pointer ring-2 ring-transparent hover:ring-primary transition-all">
+                        <img alt={`View ${idx}`} className="w-full h-full object-cover" src={img} />
+                    </div>
+                 ))}
+                 {/* Fallback duplicates for layout if single image */}
+                 {[...Array(Math.max(0, 4 - property.images.length))].map((_, idx) => (
+                    <div key={idx + 4} className="h-24 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700"></div>
+                 ))}
               </div>
             </div>
 
@@ -74,7 +104,7 @@ export const PropertyDetails = () => {
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Luxury 5 Bedroom Duplex</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{property.title}</h1>
                     <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1 font-medium border border-blue-200 dark:border-blue-800">
                       <span className="material-symbols-outlined text-[14px]">verified</span>
                       Verified
@@ -82,12 +112,13 @@ export const PropertyDetails = () => {
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 flex items-center gap-1 text-sm">
                     <span className="material-symbols-outlined text-sm">location_on</span>
-                    12 Awolowo Avenue, Old Bodija, Ibadan, Oyo State
+                    {property.location}
                   </p>
                 </div>
                 <div className="text-right">
                   <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-2xl font-bold px-4 py-2 rounded-lg border border-green-200 dark:border-green-800">
-                    ₦185,000,000
+                    ₦{(property.price / 1000000).toFixed(1)}M
+                    {property.period && <span className="text-sm font-normal text-gray-500">/{property.period}</span>}
                   </span>
                 </div>
               </div>
@@ -98,35 +129,26 @@ export const PropertyDetails = () => {
                       <span className="material-symbols-outlined">bed</span>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Bedrooms</p>
-                      <p className="font-semibold dark:text-gray-200">5 Rooms</p>
+                        <span className="block text-xl font-bold text-gray-900 dark:text-white">{property.bedrooms}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Bedrooms</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                   <div className="flex items-center gap-3">
                     <div className="p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
                       <span className="material-symbols-outlined">bathtub</span>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Bathrooms</p>
-                      <p className="font-semibold dark:text-gray-200">6 Baths</p>
+                        <span className="block text-xl font-bold text-gray-900 dark:text-white">{property.bathrooms}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Bathrooms</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                   <div className="flex items-center gap-3">
                     <div className="p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
                       <span className="material-symbols-outlined">square_foot</span>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Size</p>
-                      <p className="font-semibold dark:text-gray-200">650 sqm</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
-                      <span className="material-symbols-outlined">garage</span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Parking</p>
-                      <p className="font-semibold dark:text-gray-200">4 Cars</p>
+                        <span className="block text-xl font-bold text-gray-900 dark:text-white">{property.size || 0}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Sqm</span>
                     </div>
                   </div>
                 </div>
@@ -168,11 +190,13 @@ export const PropertyDetails = () => {
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700 sticky top-4">
               <div className="flex items-center gap-4 mb-6">
-                <img alt="Agent" className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-sm" src="/landlord.jpg" />
+                <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 border-2 border-white dark:border-gray-700 shadow-sm">
+                  <span className="material-symbols-outlined text-3xl">person</span>
+                </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Listed by</p>
-                  <h3 className="font-bold text-gray-900 dark:text-white text-lg">Chinedu Okafor</h3>
-                  <p className="text-xs text-primary dark:text-blue-400 font-medium">Landlord</p>
+                  <h3 className="font-bold text-gray-900 dark:text-white text-lg">Landlord</h3>
+                  <p className="text-xs text-primary dark:text-blue-400 font-medium">Verified Owner</p>
                 </div>
               </div>
               <div className="space-y-3">
@@ -216,112 +240,11 @@ export const PropertyDetails = () => {
         <div className="mt-16">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Similar Homes You Might Like</h2>
-            <a className="text-primary dark:text-blue-400 font-medium text-sm flex items-center hover:underline" href="#">
-              View all
-              <span className="material-symbols-outlined text-sm ml-1">arrow_forward</span>
-            </a>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Card 1 */}
-            <div className="bg-surface-light dark:bg-surface-dark rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700 group cursor-pointer">
-              <div className="relative h-48 overflow-hidden">
-                <img alt="House" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="/properties/property-3.jpg" />
-                <div className="absolute top-3 right-3 bg-white/90 dark:bg-black/70 p-1.5 rounded-full text-gray-500 hover:text-red-500 cursor-pointer">
-                  <span className="material-symbols-outlined text-sm block">favorite_border</span>
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-gray-900 dark:text-white truncate pr-2">4 Bedroom Semi-Detached</h3>
-                  <span className="text-green-600 dark:text-green-400 font-bold text-sm">₦85M</span>
-                </div>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mb-3 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[12px]">location_on</span>
-                  Akobo, Ibadan
-                </p>
-                <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">bed</span> 4</span>
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">bathtub</span> 5</span>
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">square_foot</span> 450</span>
-                </div>
-              </div>
-            </div>
-            
-             {/* Card 2 */}
-             <div className="bg-surface-light dark:bg-surface-dark rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700 group cursor-pointer">
-              <div className="relative h-48 overflow-hidden">
-                <img alt="House" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="/properties/property-4.jpg" />
-                <div className="absolute top-3 right-3 bg-white/90 dark:bg-black/70 p-1.5 rounded-full text-gray-500 hover:text-red-500 cursor-pointer">
-                  <span className="material-symbols-outlined text-sm block">favorite_border</span>
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-gray-900 dark:text-white truncate pr-2">Modern Bungalow</h3>
-                  <span className="text-green-600 dark:text-green-400 font-bold text-sm">₦45M</span>
-                </div>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mb-3 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[12px]">location_on</span>
-                  Ring Road, Ibadan
-                </p>
-                <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">bed</span> 3</span>
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">bathtub</span> 3</span>
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">square_foot</span> 300</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3 */}
-            <div className="bg-surface-light dark:bg-surface-dark rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700 group cursor-pointer">
-              <div className="relative h-48 overflow-hidden">
-                <img alt="House" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="/properties/property-5.jpg" />
-                <div className="absolute top-3 right-3 bg-white/90 dark:bg-black/70 p-1.5 rounded-full text-gray-500 hover:text-red-500 cursor-pointer">
-                  <span className="material-symbols-outlined text-sm block">favorite_border</span>
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-gray-900 dark:text-white truncate pr-2">Luxury Apartment</h3>
-                  <span className="text-green-600 dark:text-green-400 font-bold text-sm">₦120M</span>
-                </div>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mb-3 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[12px]">location_on</span>
-                  Jericho, Ibadan
-                </p>
-                <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">bed</span> 4</span>
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">bathtub</span> 5</span>
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">square_foot</span> 500</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Card 4 */}
-            <div className="bg-surface-light dark:bg-surface-dark rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700 group cursor-pointer">
-              <div className="relative h-48 overflow-hidden">
-                <img alt="House" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="/properties/property-6.jpg" />
-                <div className="absolute top-3 right-3 bg-white/90 dark:bg-black/70 p-1.5 rounded-full text-gray-500 hover:text-red-500 cursor-pointer">
-                  <span className="material-symbols-outlined text-sm block">favorite_border</span>
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-gray-900 dark:text-white truncate pr-2">New Terrace Duplex</h3>
-                  <span className="text-green-600 dark:text-green-400 font-bold text-sm">₦75M</span>
-                </div>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mb-3 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[12px]">location_on</span>
-                  Iyaganku, Ibadan
-                </p>
-                <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-300">
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">bed</span> 3</span>
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">bathtub</span> 4</span>
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">square_foot</span> 280</span>
-                </div>
-              </div>
-            </div>
-
+          <div className="w-full bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center">
+            <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">home_work</span>
+            <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No similar homes found</h4>
+            <p className="text-gray-500 dark:text-gray-400 max-w-md">We couldn't find any properties similar to this one at the moment.</p>
           </div>
         </div>
       </main>
@@ -329,8 +252,8 @@ export const PropertyDetails = () => {
       <ReviewModal 
         isOpen={isReviewOpen} 
         onClose={() => setIsReviewOpen(false)} 
-        landlordName="Chinedu Okafor"
-        landlordImage="/landlord.jpg"
+        landlordName="Landlord"
+        landlordImage=""
       />
     </div>
   );

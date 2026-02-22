@@ -1,28 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-
-const testimonials = [
-  {
-    content: "I was tired of agents taking me to see houses that looked nothing like the pictures. EasyBuy changed that. The verification process is real!",
-    author: "Chinedu Okafor",
-    role: "Bought in Lekki",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAZPlSdSkOshAEPb1B-RE7amugZ195Zi55gSah3exo1TUuvQjggMYAMrIlLvrcIOllOJkVGPBEm31cgL27InUyYf4detDJThjr2g7TnMUSv02a0xvHRuPqC7dtjwky37IvfDPEXcQ9RfDePkRms4xcXnNldaG6Db7LNSD356359Mtujj5-IYjYfvQQpo2Z1i71X_f7mbg4fWe_iz4GdjNj4WE6h3R7FVcujOk_i4cEW4DurZSixFj1aEwcRJmh-s6fUuY4x5C8rRieo"
-  },
-  {
-    content: "Moving from Lagos to Abuja was stressful until I found this app. I secured my apartment in Wuse without even travelling first.",
-    author: "Amina Yusuf",
-    role: "Rented in Abuja",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBP7WJzsHrtLzeIehrPRqqw4lQs5iZXDUQvlFcnVSuDe3Ep-HS3H6kKRGcdGksDdzsNwNdkdbG8p4ZzExpvMwTML4M9affAOH-H2BiwUyyn6hwszByRuRWg9IxvJ-M7rFCcUU_GWWaphImCfmS_IfYp8AksBDOWkHO8WFJ85RSMuqCpxMqCH3gqdwLXqSM9YY5LL2pte5R7wTs2x4kW1NRJCvMLDsTRrY1UcWjP6rlmPWo2eoCXApn4cRn0lFUQoIIR3Qc19cE41E3D"
-  },
-  {
-    content: "As a landlord, listing here has been seamless. I get serious inquiries only, and the dashboard is very easy to use.",
-    author: "Mr. Adebayo",
-    role: "Property Owner, Ibadan",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBKDhzAZ1GsfXYY_UENlbLeLOwqwu3bz3HuswPJCMpII_pxvew-AMqwqzb6NNFTM-EYgZudTpLBU--ZSaRBgTA8B3foxCSYYkpGjK3ZgZ4c91SVOd4dz79FflAzsjpaG68B3KTckAuAfEomUqVLQ-Px-n1jKx-s0IFlHAdl-aiKl_XDFJcvXmW4qzICod76lgNC0lJhnJzTqpnlbscOY9ln5CdIB_N2n1zsW9c1f7OqzgZX8ii20HOtYEJqjz5z2WGjdF87qsfyz1IW"
-  },
-];
+import { useTestimonials } from '../../../hooks/useTestimonials';
 
 export const Testimonials = () => {
+  const { testimonials } = useTestimonials();
+
+  if (!testimonials || testimonials.length === 0) return null;
+
   return (
     <section className="py-24 bg-background-light dark:bg-background-dark overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 text-center">
@@ -43,7 +27,7 @@ export const Testimonials = () => {
            {[...testimonials, ...testimonials, ...testimonials].map((item, index) => (
              <div key={index} className="w-[350px] md:w-[450px] flex-shrink-0 bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
                 <div className="flex items-center gap-1 text-yellow-400 mb-4">
-                  {[...Array(5)].map((_, i) => (
+                  {[...Array(item.rating || 5)].map((_, i) => (
                     <span key={i} className="material-symbols-outlined fill-current">star</span>
                   ))}
                 </div>

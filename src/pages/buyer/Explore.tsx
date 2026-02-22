@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../../components/common/Sidebar';
+import { useProperties } from '../../hooks/useProperties';
 
 const FilterContent = () => (
     <div className="space-y-6">
@@ -67,6 +68,7 @@ const FilterContent = () => (
 export const Explore = () => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const navigate = useNavigate();
+  const { properties } = useProperties();
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-sans text-gray-800 dark:text-gray-100 transition-colors duration-300 antialiased min-h-screen flex flex-col md:flex-row">
@@ -92,8 +94,8 @@ export const Explore = () => {
          {/* Search & Header */}
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-8">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Properties in Lekki Phase 1</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Showing 1-12 of 145 results</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Explore Properties</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Showing 0 results</p>
             </div>
             
              <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
@@ -104,7 +106,6 @@ export const Explore = () => {
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-dark text-gray-900 dark:text-white focus:ring-primary focus:border-primary shadow-sm text-sm outline-none" 
                         placeholder="Search location, price..." 
                         type="text"
-                        defaultValue="Lekki Phase 1, Lagos"
                     />
                 </div>
                 
@@ -131,24 +132,6 @@ export const Explore = () => {
             </div>
         </div>
 
-        {/* Active Filters */}
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-            <span className="text-xs font-semibold text-gray-500 uppercase mr-2">Active Filters:</span>
-            <div className="inline-flex items-center bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-xs font-medium border border-blue-100 dark:border-blue-800">
-                Apartment
-                <button className="ml-1 hover:text-blue-900"><span className="material-symbols-outlined text-sm">close</span></button>
-            </div>
-            <div className="inline-flex items-center bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-xs font-medium border border-blue-100 dark:border-blue-800">
-                ₦2M - ₦5M
-                <button className="ml-1 hover:text-blue-900"><span className="material-symbols-outlined text-sm">close</span></button>
-            </div>
-            <div className="inline-flex items-center bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-xs font-medium border border-blue-100 dark:border-blue-800">
-                24/7 Power
-                <button className="ml-1 hover:text-blue-900"><span className="material-symbols-outlined text-sm">close</span></button>
-            </div>
-            <button className="text-xs text-primary font-medium hover:underline ml-2">Clear All</button>
-        </div>
-
         <div className="flex flex-col lg:flex-row gap-8">
             {/* Filter Sidebar (Desktop) */}
             <aside className="hidden lg:block w-72 flex-shrink-0 space-y-8">
@@ -166,92 +149,10 @@ export const Explore = () => {
 
             {/* Results Grid */}
             <div className="flex-1">
-                <div className="grid md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
-                    {/* Property Card 1 */}
-                   <div onClick={() => navigate('/property/1')} className="bg-white dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition duration-300 border border-gray-200 dark:border-gray-700 group cursor-pointer relative">
-                        <div className="absolute top-4 left-4 z-10 bg-green-500 text-white text-xs font-bold px-2.5 py-1.5 rounded-full shadow-lg flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm">auto_awesome</span> 98% Match
-                        </div>
-                        <button className="absolute top-4 right-4 z-10 bg-white/20 backdrop-blur-md p-1.5 rounded-full hover:bg-white text-white hover:text-red-500 transition">
-                            <span className="material-symbols-outlined text-lg">favorite_border</span>
-                        </button>
-                        <div className="relative h-56 overflow-hidden">
-                            <img alt="Modern Lekki House" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" src="/properties/property-1.jpg"/>
-                            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4 pt-12">
-                                <p className="text-white font-bold text-lg">₦3.5M <span className="text-xs font-normal opacity-80">/ year</span></p>
-                            </div>
-                        </div>
-                        <div className="p-5">
-                            <h4 className="text-base font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">Luxury 2-Bed Service Apt</h4>
-                            <p className="text-gray-500 dark:text-gray-400 text-xs mb-3 flex items-center gap-1">
-                                <span className="material-symbols-outlined text-sm">location_on</span> Lekki Phase 1, Lagos
-                            </p>
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-sm">bolt</span> 24h Power
-                                </span>
-                                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-sm">security</span> Gated
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-                                <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">bed</span> 2 Beds</span>
-                                <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">bathtub</span> 3 Baths</span>
-                                <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">square_foot</span> 120m²</span>
-                            </div>
-                        </div>
-                    </div>
-
-                     {/* Property Card 2 */}
-                    <div onClick={() => navigate('/property/2')} className="bg-white dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition duration-300 border border-gray-200 dark:border-gray-700 group cursor-pointer relative">
-                        <div className="absolute top-4 left-4 z-10 bg-green-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-full shadow-lg flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm">auto_awesome</span> 92% Match
-                        </div>
-                        <button className="absolute top-4 right-4 z-10 bg-white/20 backdrop-blur-md p-1.5 rounded-full hover:bg-white text-white hover:text-red-500 transition">
-                            <span className="material-symbols-outlined text-lg">favorite_border</span>
-                        </button>
-                        <div className="relative h-56 overflow-hidden">
-                            <img alt="Apartment Interior" className="w-full h-full object-cover group-hover:scale-110 transition duration-700" src="/properties/property-2.jpg"/>
-                            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4 pt-12">
-                                <p className="text-white font-bold text-lg">₦4.2M <span className="text-xs font-normal opacity-80">/ year</span></p>
-                            </div>
-                        </div>
-                        <div className="p-5">
-                            <h4 className="text-base font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">Newly Built 3-Bed Flat</h4>
-                            <p className="text-gray-500 dark:text-gray-400 text-xs mb-3 flex items-center gap-1">
-                                <span className="material-symbols-outlined text-sm">location_on</span> Ikate, Lekki
-                            </p>
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-sm">bolt</span> Solar
-                                </span>
-                                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-sm">water_drop</span> Treated
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-                                <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">bed</span> 3 Beds</span>
-                                <span className="flex items-center gap-1"><span class="material-symbols-outlined text-sm">bathtub</span> 4 Baths</span>
-                                <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">garage</span> 2 Cars</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                 {/* Pagination */}
-                <div className="mt-12 flex justify-center">
-                    <nav className="flex items-center gap-2">
-                        <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50">
-                            <span className="material-symbols-outlined">chevron_left</span>
-                        </button>
-                        <button className="h-10 w-10 flex items-center justify-center rounded-lg bg-primary text-white font-medium">1</button>
-                        <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium">2</button>
-                        <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium">3</button>
-                        <span className="text-gray-400">...</span>
-                        <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50">
-                            <span className="material-symbols-outlined">chevron_right</span>
-                        </button>
-                    </nav>
+                <div className="w-full bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
+                    <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
+                    <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No properties found</h4>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-md">Try adjusting your search or filters to find what you're looking for.</p>
                 </div>
             </div>
         </div>

@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Sidebar } from '../../components/common/Sidebar';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const Settings = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get('tab') || 'profile';
+    const { currentUser } = useAuth();
 
     const setActiveTab = (tab: string) => {
         setSearchParams({ tab });
@@ -18,17 +20,15 @@ export const Settings = () => {
                         <div className="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
                              <div className="flex flex-col sm:flex-row items-center gap-6 mb-8">
                                 <div className="relative group cursor-pointer">
-                                    <img 
-                                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150" 
-                                        alt="Profile" 
-                                        className="w-24 h-24 rounded-full object-cover ring-4 ring-gray-50 dark:ring-gray-800"
-                                    />
+                                    <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center ring-4 ring-gray-50 dark:ring-gray-800 uppercase">
+                                        <span className="text-3xl font-bold text-primary">{currentUser?.displayName?.charAt(0) || 'U'}</span>
+                                    </div>
                                     <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                         <span className="material-symbols-outlined text-white">photo_camera</span>
                                     </div>
                                 </div>
                                 <div className="text-center sm:text-left">
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Chisom Okoro</h3>
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">{currentUser?.displayName || 'User'}</h3>
                                     <p className="text-gray-500 dark:text-gray-400 text-sm">Buyer Account</p>
                                     <button className="mt-2 text-primary text-sm font-medium hover:underline">Change Profile Photo</button>
                                 </div>
@@ -39,7 +39,8 @@ export const Settings = () => {
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
                                     <input 
                                         type="text" 
-                                        defaultValue="Chisom Okoro" 
+                                        defaultValue={currentUser?.displayName || ''}
+                                        placeholder="Enter your full name" 
                                         className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary focus:border-primary outline-none transition-colors"
                                     />
                                 </div>
@@ -47,15 +48,18 @@ export const Settings = () => {
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
                                     <input 
                                         type="email" 
-                                        defaultValue="chisom.okoro@example.com" 
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary focus:border-primary outline-none transition-colors"
+                                        defaultValue={currentUser?.email || ''}
+                                        disabled
+                                        placeholder="Enter your email address" 
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed outline-none transition-colors"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
                                     <input 
                                         type="tel" 
-                                        defaultValue="+234 801 234 5678" 
+                                        defaultValue={currentUser?.phoneNumber || ''}
+                                        placeholder="Enter your phone number" 
                                         className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary focus:border-primary outline-none transition-colors"
                                     />
                                 </div>
@@ -63,7 +67,8 @@ export const Settings = () => {
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
                                     <input 
                                         type="text" 
-                                        defaultValue="Lagos, Nigeria" 
+                                        defaultValue={currentUser?.location || ''}
+                                        placeholder="Enter your location" 
                                         className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary focus:border-primary outline-none transition-colors"
                                     />
                                 </div>

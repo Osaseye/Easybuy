@@ -1,4 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { LandingPage } from './pages/landing/LandingPage';
 import { Register } from './pages/auth/Register';
 import { Login } from './pages/auth/Login';
@@ -20,30 +23,81 @@ import { LandlordSettings } from './pages/landlord/LandlordSettings';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        
-        {/* Buyer Routes */}
-        <Route path="/onboarding/buyer" element={<BuyerOnboarding />} />
-        <Route path="/dashboard" element={<BuyerDashboard />} />
-        <Route path="/explore" element={<Explore />} />
-        <Route path="/property/:id" element={<PropertyDetails />} />
-        <Route path="/landlord/:id" element={<LandlordProfile />} />
-        <Route path="/saved" element={<SavedProperties />} />
-        <Route path="/settings" element={<Settings />} />
+    <AuthProvider>
+      <Router>
+        <Toaster position="top-center" richColors />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          {/* Buyer Routes */}
+          <Route path="/onboarding/buyer" element={
+            <ProtectedRoute allowedRoles={['buyer']}>
+              <BuyerOnboarding />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute allowedRoles={['buyer']}>
+              <BuyerDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/explore" element={
+            <ProtectedRoute allowedRoles={['buyer']}>
+              <Explore />
+            </ProtectedRoute>
+          } />
+          <Route path="/property/:id" element={
+            <ProtectedRoute allowedRoles={['buyer']}>
+              <PropertyDetails />
+            </ProtectedRoute>
+          } />
+          <Route path="/landlord/:id" element={
+            <ProtectedRoute allowedRoles={['buyer']}>
+              <LandlordProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/saved" element={
+            <ProtectedRoute allowedRoles={['buyer']}>
+              <SavedProperties />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute allowedRoles={['buyer']}>
+              <Settings />
+            </ProtectedRoute>
+          } />
 
-        {/* Landlord Routes */}
-        <Route path="/onboarding/landlord" element={<LandlordOnboarding />} />
-        <Route path="/landlord/dashboard" element={<LandlordDashboard />} />
-        <Route path="/landlord/upload" element={<UploadProperty />} />
-        <Route path="/landlord/listings" element={<MyListings />} />
-        <Route path="/landlord/settings" element={<LandlordSettings />} />
-      </Routes>
-    </Router>
+          {/* Landlord Routes */}
+          <Route path="/onboarding/landlord" element={
+            <ProtectedRoute allowedRoles={['landlord']}>
+              <LandlordOnboarding />
+            </ProtectedRoute>
+          } />
+          <Route path="/landlord/dashboard" element={
+            <ProtectedRoute allowedRoles={['landlord']}>
+              <LandlordDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/landlord/upload" element={
+            <ProtectedRoute allowedRoles={['landlord']}>
+              <UploadProperty />
+            </ProtectedRoute>
+          } />
+          <Route path="/landlord/listings" element={
+            <ProtectedRoute allowedRoles={['landlord']}>
+              <MyListings />
+            </ProtectedRoute>
+          } />
+          <Route path="/landlord/settings" element={
+            <ProtectedRoute allowedRoles={['landlord']}>
+              <LandlordSettings />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

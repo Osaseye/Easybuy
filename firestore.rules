@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isLandlord() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'landlord';
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Anyone can read user profiles (e.g., to see landlord details)
+      allow read: if true;
+      // Users can only create/update/delete their own profile
+      allow create, update, delete: if isOwner(userId);
+    }
+
+    // Properties collection
+    match /properties/{propertyId} {
+      // Anyone can read properties
+      allow read: if true;
+      // Only landlords can create properties
+      allow create: if isLandlord() && request.resource.data.landlordId == request.auth.uid;
+      // Landlords can only update/delete their own properties
+      allow update, delete: if isLandlord() && resource.data.landlordId == request.auth.uid;
+    }
+
+    // Saved properties (subcollection or separate collection)
+    match /savedProperties/{saveId} {
+      allow read, write: if isOwner(resource.data.userId) || isOwner(request.resource.data.userId);
+    }
+  }
+}

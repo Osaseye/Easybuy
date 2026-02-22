@@ -35,11 +35,9 @@ export const LandlordSidebar = () => {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                     <img 
-                        src="/landlord.jpg" 
-                        alt="Profile" 
-                        className="w-9 h-9 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700"
-                    />
+                     <div className="w-9 h-9 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold ring-2 ring-gray-100 dark:ring-gray-700">
+                        L
+                     </div>
                 </div>
             </div>
 
@@ -138,13 +136,11 @@ export const LandlordSidebar = () => {
                     {!collapsed && (
                         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3 px-3">
-                                <img 
-                                    src="/landlord.jpg" 
-                                    alt="User" 
-                                    className="w-8 h-8 rounded-full bg-gray-200 object-cover"
-                                />
+                                <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold">
+                                    L
+                                </div>
                                 <div className="overflow-hidden">
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">John Landlord</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Landlord</p>
                                     <button onClick={() => navigate('/login')} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 mt-0.5">
                                         Sign out
                                     </button>
@@ -211,8 +207,12 @@ export const LandlordSidebar = () => {
                                 }
                             `}
                         >
-                            <span className="material-symbols-outlined text-2xl">{item.icon}</span>
-                            <div className={({ isActive }: any) => isActive ? 'absolute -bottom-2 w-1 h-1 bg-secondary rounded-full' : 'hidden'} />
+                            {({ isActive }) => (
+                                <>
+                                    <span className="material-symbols-outlined text-2xl">{item.icon}</span>
+                                    <div className={isActive ? 'absolute -bottom-2 w-1 h-1 bg-secondary rounded-full' : 'hidden'} />
+                                </>
+                            )}
                         </NavLink>
                     )
                  })}

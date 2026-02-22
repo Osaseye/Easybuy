@@ -1,7 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../../lib/firebase';
+import { toast } from 'sonner';
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+});
+
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export const ForgotPassword = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSent, setIsSent] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+  });
+
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
+    setIsLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, data.email);
+      setIsSent(true);
+      toast.success('Password reset email sent! Please check your inbox.');
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast.error(error.message || 'Failed to send reset email. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="w-full h-screen flex flex-col md:flex-row bg-[url('/hero-bg.jpg')] bg-cover bg-center md:bg-none text-gray-800 dark:text-gray-100 transition-colors duration-200 overflow-hidden relative">
       <style>{`
@@ -66,31 +102,58 @@ export const ForgotPassword = () => {
               <p className="text-gray-500 dark:text-gray-400">Enter your email and we'll send you a link to reset your password.</p>
             </div>
 
-            <form className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="email">Email Address</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                       <span className="material-symbols-outlined text-gray-400 text-lg">email</span>
-                    </div>
-                    <input className="pl-10 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-primary focus:border-primary block p-2.5 sm:text-sm" id="email" name="email" placeholder="name@example.com" required type="email"/>
-                  </div>
+            {isSent ? (
+              <div className="text-center space-y-6">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="material-symbols-outlined text-3xl text-green-600 dark:text-green-400">mark_email_read</span>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Check your email</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  We've sent a password reset link to your email address. Please check your inbox and spam folder.
+                </p>
+                <div className="pt-4">
+                  <Link to="/login" className="w-full inline-block text-white bg-primary hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-3 text-center transition-colors shadow-lg shadow-blue-500/30">
+                    Return to Login
+                  </Link>
                 </div>
               </div>
+            ) : (
+              <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="email">Email Address</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                         <span className="material-symbols-outlined text-gray-400 text-lg">email</span>
+                      </div>
+                      <input className={`pl-10 w-full rounded-lg border ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary focus:border-primary'} bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white block p-2.5 sm:text-sm`} id="email" placeholder="name@example.com" type="email" {...register('email')} />
+                    </div>
+                    {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
+                  </div>
+                </div>
 
-              <button type="submit" className="w-full text-white bg-primary hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-3 text-center transition-colors shadow-lg shadow-blue-500/30">
-                Send Reset Link
-              </button>
+                <button type="submit" disabled={isLoading} className="w-full text-white bg-primary hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-3 text-center transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center">
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Reset Link'
+                  )}
+                </button>
 
-              <div className="flex items-center justify-center gap-2 mt-6">
-                  <span className="material-symbols-outlined text-gray-400 text-sm">arrow_back</span>
-                  <Link to="/login" className="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
-                      Back to Login
-                  </Link>
-              </div>
-
-            </form>
+                <div className="flex items-center justify-center gap-2 mt-6">
+                    <span className="material-symbols-outlined text-gray-400 text-sm">arrow_back</span>
+                    <Link to="/login" className="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+                        Back to Login
+                    </Link>
+                </div>
+              </form>
+            )}
           </div>
         </div>
     </div>

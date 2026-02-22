@@ -1,19 +1,85 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../../lib/firebase';
+import { toast } from 'sonner';
+
+const registerSchema = z.object({
+  role: z.enum(['buyer', 'landlord']),
+  fullname: z.string().min(2, 'Full name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(6, 'Please confirm your password'),
+  terms: z.boolean().refine((val) => val === true, {
+    message: 'You must accept the terms and conditions',
+  }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export const Register = () => {
-  const [role, setRole] = useState('buyer');
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real app, registration API call would go here.
-    if (role === 'buyer') {
-      navigate('/onboarding/buyer');
-    } else if (role === 'landlord') {
-      navigate('/onboarding/landlord');
-    } else {
-      navigate('/login');
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      role: 'buyer',
+    },
+  });
+
+  const selectedRole = watch('role');
+
+  const onSubmit = async (data: RegisterFormValues) => {
+    setIsLoading(true);
+    try {
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
+
+      // 2. Update profile with full name
+      await updateProfile(user, {
+        displayName: data.fullname,
+      });
+
+      // 3. Create user document in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        email: data.email,
+        displayName: data.fullname,
+        role: data.role,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      toast.success('Account created successfully!');
+
+      // 4. Redirect based on role
+      if (data.role === 'buyer') {
+        navigate('/onboarding/buyer');
+      } else {
+        navigate('/onboarding/landlord');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast.error(error.message || 'Failed to create account. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -69,22 +135,20 @@ export const Register = () => {
               <p className="text-gray-500 dark:text-gray-400">Choose your role to get started with EasyBuy.</p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleRegister}>
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <label className="relative cursor-pointer group">
                   <input 
                     type="radio" 
-                    name="role" 
                     value="buyer" 
                     className="sr-only peer"
-                    checked={role === 'buyer'}
-                    onChange={() => setRole('buyer')}
+                    {...register('role')}
                   />
-                  <div className={`p-4 rounded-xl border-2 transition-all h-full flex flex-col items-center text-center relative bg-white dark:bg-gray-800 ${role === 'buyer' ? 'border-primary bg-blue-50/50 dark:bg-blue-900/10' : 'border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500'}`}>
+                  <div className={`p-4 rounded-xl border-2 transition-all h-full flex flex-col items-center text-center relative bg-white dark:bg-gray-800 ${selectedRole === 'buyer' ? 'border-primary bg-blue-50/50 dark:bg-blue-900/10' : 'border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500'}`}>
                     <span className="material-symbols-outlined text-3xl text-primary mb-2">home</span>
                     <h3 className="font-semibold text-gray-900 dark:text-white">Buyer / Tenant</h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">I want to find a home</p>
-                    {role === 'buyer' && (
+                    {selectedRole === 'buyer' && (
                         <div className="absolute top-2 right-2 text-primary">
                              <span className="material-symbols-outlined text-xl">check_circle</span>
                         </div>
@@ -95,17 +159,15 @@ export const Register = () => {
                 <label className="relative cursor-pointer group">
                   <input 
                     type="radio" 
-                    name="role" 
                     value="landlord" 
                     className="sr-only peer"
-                    checked={role === 'landlord'}
-                    onChange={() => setRole('landlord')}
+                    {...register('role')}
                   />
-                  <div className={`p-4 rounded-xl border-2 transition-all h-full flex flex-col items-center text-center relative bg-white dark:bg-gray-800 ${role === 'landlord' ? 'border-secondary bg-green-50/50 dark:bg-green-900/10' : 'border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500'}`}>
+                  <div className={`p-4 rounded-xl border-2 transition-all h-full flex flex-col items-center text-center relative bg-white dark:bg-gray-800 ${selectedRole === 'landlord' ? 'border-secondary bg-green-50/50 dark:bg-green-900/10' : 'border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500'}`}>
                     <span className="material-symbols-outlined text-3xl text-secondary mb-2">apartment</span>
                     <h3 className="font-semibold text-gray-900 dark:text-white">Landlord</h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">I want to list property</p>
-                    {role === 'landlord' && (
+                    {selectedRole === 'landlord' && (
                         <div className="absolute top-2 right-2 text-primary">
                              <span className="material-symbols-outlined text-xl">check_circle</span>
                         </div>
@@ -121,8 +183,9 @@ export const Register = () => {
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <span className="material-symbols-outlined text-gray-400 text-lg">person</span>
                     </div>
-                    <input className="pl-10 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-primary focus:border-primary block p-2.5 sm:text-sm" id="fullname" name="fullname" placeholder="e.g. Adebayo Ogunlesi" required type="text"/>
+                    <input className={`pl-10 w-full rounded-lg border ${errors.fullname ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary focus:border-primary'} bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white block p-2.5 sm:text-sm`} id="fullname" placeholder="e.g. Adebayo Ogunlesi" type="text" {...register('fullname')} />
                   </div>
+                  {errors.fullname && <p className="mt-1 text-sm text-red-500">{errors.fullname.message}</p>}
                 </div>
                 
                 <div>
@@ -131,8 +194,9 @@ export const Register = () => {
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                        <span className="material-symbols-outlined text-gray-400 text-lg">email</span>
                     </div>
-                    <input className="pl-10 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-primary focus:border-primary block p-2.5 sm:text-sm" id="email" name="email" placeholder="name@example.com" required type="email"/>
+                    <input className={`pl-10 w-full rounded-lg border ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary focus:border-primary'} bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white block p-2.5 sm:text-sm`} id="email" placeholder="name@example.com" type="email" {...register('email')} />
                   </div>
+                  {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
                 </div>
 
                 <div>
@@ -141,25 +205,51 @@ export const Register = () => {
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                        <span className="material-symbols-outlined text-gray-400 text-lg">lock</span>
                     </div>
-                    <input className="pl-10 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-primary focus:border-primary block p-2.5 sm:text-sm" id="password" name="password" placeholder="••••••••" required type="password"/>
-                    <button className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" type="button">
-                       <span className="material-symbols-outlined text-lg">visibility_off</span>
+                    <input className={`pl-10 w-full rounded-lg border ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary focus:border-primary'} bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white block p-2.5 sm:text-sm`} id="password" placeholder="••••••••" type={showPassword ? "text" : "password"} {...register('password')} />
+                    <button className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" type="button" onClick={() => setShowPassword(!showPassword)}>
+                       <span className="material-symbols-outlined text-lg">{showPassword ? 'visibility' : 'visibility_off'}</span>
                     </button>
                   </div>
+                  {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="confirmPassword">Confirm Password</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                       <span className="material-symbols-outlined text-gray-400 text-lg">lock</span>
+                    </div>
+                    <input className={`pl-10 w-full rounded-lg border ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary focus:border-primary'} bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white block p-2.5 sm:text-sm`} id="confirmPassword" placeholder="••••••••" type={showConfirmPassword ? "text" : "password"} {...register('confirmPassword')} />
+                    <button className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                       <span className="material-symbols-outlined text-lg">{showConfirmPassword ? 'visibility' : 'visibility_off'}</span>
+                    </button>
+                  </div>
+                  {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword.message}</p>}
                 </div>
               </div>
 
               <div className="flex items-start">
                 <div className="flex items-center h-5">
-                  <input id="terms" required type="checkbox" className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800"/>
+                  <input id="terms" type="checkbox" className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800" {...register('terms')} />
                 </div>
                 <div className="ml-3 text-sm">
                   <label htmlFor="terms" className="font-medium text-gray-500 dark:text-gray-400">I agree to the <a href="#" className="text-primary hover:underline dark:text-blue-400">Terms of Service</a> and <a href="#" className="text-primary hover:underline dark:text-blue-400">Privacy Policy</a></label>
+                  {errors.terms && <p className="mt-1 text-sm text-red-500">{errors.terms.message}</p>}
                 </div>
               </div>
 
-              <button type="submit" className="w-full text-white bg-primary hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-3 text-center transition-colors shadow-lg shadow-blue-500/30">
-                Create Account
+              <button type="submit" disabled={isLoading} className="w-full text-white bg-primary hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-3 text-center transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center">
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating Account...
+                  </>
+                ) : (
+                  'Create Account'
+                )}
               </button>
 
               <div className="relative my-6">

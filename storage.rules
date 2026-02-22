@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User avatars
+    match /users/{userId}/{allPaths=**} {
+      // Anyone can view avatars
+      allow read: if true;
+      // Only the user can upload/modify their own avatar
+      allow write: if isOwner(userId) 
+                   && request.resource.size < 5 * 1024 * 1024 // Max 5MB
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Property images
+    match /properties/{propertyId}/{allPaths=**} {
+      // Anyone can view property images
+      allow read: if true;
+      // Only authenticated users (landlords) can upload property images
+      // Note: We can't easily check Firestore roles from Storage rules without custom claims,
+      // so we rely on the client to only allow landlords to upload, and restrict by auth.
+      allow write: if isAuthenticated() 
+                   && request.resource.size < 10 * 1024 * 1024 // Max 10MB per image
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
