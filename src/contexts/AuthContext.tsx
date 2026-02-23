@@ -14,6 +14,7 @@ export interface AppUser {
   displayName?: string;
   fullName?: string;
   profileImageUrl?: string;
+  photoURL?: string;
   phoneNumber?: string;
   location?: string;
   agencyName?: string;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import type { Property } from '../types';
-import { mockProperties } from '../data/mockData';
 
 export const useProperties = () => {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -8,15 +9,21 @@ export const useProperties = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Replace with actual API call
     const fetchProperties = async () => {
       try {
         setLoading(true);
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // Cast to any if needed to avoid strict type mismatch during dev if mockData is incomplete
-        setProperties(mockProperties as any); 
+        const propertiesRef = collection(db, 'properties');
+        const q = query(propertiesRef, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        
+        const fetchedProperties: Property[] = [];
+        querySnapshot.forEach((doc) => {
+          fetchedProperties.push({ id: doc.id, ...doc.data() } as Property);
+        });
+        
+        setProperties(fetchedProperties);
       } catch (err) {
+        console.error("Error fetching properties:", err);
         setError('Failed to fetch properties');
       } finally {
         setLoading(false);

@@ -17,7 +17,7 @@ export interface Property {
   status: 'active' | 'pending' | 'sold' | 'draft';
   bedrooms: number;
   bathrooms: number;
-  size?: number; // in sqm
+  size?: number; // in  
   sizeUnit?: string;
   description?: string;
   images: string[];

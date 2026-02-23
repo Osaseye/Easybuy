@@ -8,10 +8,19 @@ export const Sidebar = () => {
     const [showMobileSettings, setShowMobileSettings] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
+    const { currentUser, logout } = useAuth();
 
     const toggleSidebar = () => setCollapsed(!collapsed);
     const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            console.error('Failed to log out', error);
+        }
+    };
 
     const navItems = [
         { icon: 'dashboard', label: 'Dashboard', path: '/dashboard' },
@@ -43,9 +52,13 @@ export const Sidebar = () => {
                 
                 {/* User Profile Logic: RHS */}
                 <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold ring-2 ring-gray-100 dark:ring-gray-700 uppercase">
-                        {currentUser?.displayName?.charAt(0) || 'U'}
-                    </div>
+                    {currentUser?.photoURL ? (
+                        <img src={currentUser.photoURL} alt="Profile" className="w-9 h-9 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700" />
+                    ) : (
+                        <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold ring-2 ring-gray-100 dark:ring-gray-700 uppercase">
+                            {currentUser?.displayName?.charAt(0) || 'U'}
+                        </div>
+                    )}
                     <span className="font-medium text-sm text-gray-700 dark:text-gray-200 hidden sm:block">{currentUser?.displayName || 'User'}</span>
                 </div>
             </div>
@@ -134,6 +147,12 @@ export const Sidebar = () => {
                         </NavLink>
                     );
                  })}
+                 <button 
+                    onClick={handleLogout}
+                    className="flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all relative text-red-400 hover:text-red-600 bg-transparent"
+                 >
+                    <span className="material-symbols-outlined text-2xl">logout</span>
+                 </button>
             </div>
 
             {/* Sidebar Container (Desktop Only) */}
@@ -223,14 +242,18 @@ export const Sidebar = () => {
                 {/* User Profile */}
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex items-center gap-3 px-2 py-2">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-primary flex-shrink-0 uppercase">
-                            <span className="text-lg font-bold text-primary">{currentUser?.displayName?.charAt(0) || 'U'}</span>
-                        </div>
+                        {currentUser?.photoURL ? (
+                            <img src={currentUser.photoURL} alt="Profile" className="w-10 h-10 rounded-full object-cover ring-2 ring-primary flex-shrink-0" />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-primary flex-shrink-0 uppercase">
+                                <span className="text-lg font-bold text-primary">{currentUser?.displayName?.charAt(0) || 'U'}</span>
+                            </div>
+                        )}
                         <div className={`flex-1 min-w-0 transition-all duration-300 ${collapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-auto opacity-100'}`}>
                             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{currentUser?.displayName || 'User'}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Buyer Account</p>
                         </div>
-                        <button className={`text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-all ${collapsed ? 'hidden' : 'block'}`}>
+                        <button onClick={handleLogout} className={`text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-all ${collapsed ? 'hidden' : 'block'}`}>
                             <span className="material-symbols-outlined">logout</span>
                         </button>
                     </div>

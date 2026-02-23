@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const LandlordSidebar = () => {
     const [collapsed, setCollapsed] = useState(false);
@@ -7,6 +8,16 @@ export const LandlordSidebar = () => {
     const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const { currentUser, logout } = useAuth();
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            console.error('Failed to log out', error);
+        }
+    };
 
     const navItems = [
         { icon: 'dashboard', label: 'Dashboard', path: '/landlord/dashboard' },
@@ -35,9 +46,13 @@ export const LandlordSidebar = () => {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                     <div className="w-9 h-9 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold ring-2 ring-gray-100 dark:ring-gray-700">
-                        L
-                     </div>
+                    {currentUser?.photoURL ? (
+                        <img src={currentUser.photoURL} alt="Profile" className="w-9 h-9 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700" />
+                    ) : (
+                        <div className="w-9 h-9 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold ring-2 ring-gray-100 dark:ring-gray-700">
+                            {currentUser?.displayName ? currentUser.displayName.charAt(0).toUpperCase() : 'L'}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -136,12 +151,16 @@ export const LandlordSidebar = () => {
                     {!collapsed && (
                         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3 px-3">
-                                <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold">
-                                    L
-                                </div>
+                                {currentUser?.photoURL ? (
+                                    <img src={currentUser.photoURL} alt="Profile" className="w-8 h-8 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700" />
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold">
+                                        {currentUser?.displayName ? currentUser.displayName.charAt(0).toUpperCase() : 'L'}
+                                    </div>
+                                )}
                                 <div className="overflow-hidden">
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Landlord</p>
-                                    <button onClick={() => navigate('/login')} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 mt-0.5">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{currentUser?.displayName || 'Landlord'}</p>
+                                    <button onClick={handleLogout} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 mt-0.5">
                                         Sign out
                                     </button>
                                 </div>
@@ -216,6 +235,12 @@ export const LandlordSidebar = () => {
                         </NavLink>
                     )
                  })}
+                 <button 
+                    onClick={handleLogout}
+                    className="flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all duration-300 relative text-red-400 hover:text-red-600"
+                 >
+                    <span className="material-symbols-outlined text-2xl">logout</span>
+                 </button>
             </div>
         </>
     );

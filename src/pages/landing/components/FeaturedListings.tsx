@@ -26,10 +26,10 @@ export const FeaturedListings = () => {
               <div className="relative h-64 overflow-hidden">
                 <img alt={property.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" src={property.images[0]} />
                 <div className={`absolute top-4 left-4 text-white text-xs font-bold px-3 py-1.5 rounded-md ${property.type === 'sale' ? 'bg-navy' : 'bg-secondary'}`}>
-                  FOR {property.type.toUpperCase()}
+                  FOR {property.type ? property.type.toUpperCase() : 'RENT'}
                 </div>
                 <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
-                  <span className="material-symbols-outlined text-xs">location_on</span> {property.location.split(',')[1]?.trim() || property.location}
+                  <span className="material-symbols-outlined text-xs">location_on</span> {property.city || (property.location && typeof property.location === 'string' ? property.location.split(',')[1]?.trim() : '') || property.location || 'Location'}
                 </div>
                 <button className="absolute bottom-4 right-4 bg-white/30 backdrop-blur-md p-2 rounded-full hover:bg-white text-white hover:text-red-500 transition">
                   <span className="material-symbols-outlined text-xl">favorite_border</span>

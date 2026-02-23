@@ -1,23 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Sidebar } from '../../components/common/Sidebar';
 import { ReviewModal } from '../../components/common/ReviewModal';
 import { LoadingState } from '../../components/common/LoadingState';
-import { useProperties } from '../../hooks/useProperties';
-import type { Property } from '../../types';
+import { db } from '../../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { toast } from 'sonner';
+
+interface Property {
+  id: string;
+  title: string;
+  price: number;
+  city: string;
+  state: string;
+  address: string;
+  propertyType: string;
+  bedrooms: number;
+  bathrooms: number;
+  size?: number;
+  description: string;
+  images: string[];
+  amenities: string[];
+  landlordId: string;
+}
+
+interface LandlordProfile {
+  displayName: string;
+  photoURL: string;
+  phoneNumber?: string;
+}
 
 export const PropertyDetails = () => {
   const { id } = useParams();
-  const { properties, loading } = useProperties();
+  const navigate = useNavigate();
   const [property, setProperty] = useState<Property | null>(null);
+  const [landlord, setLandlord] = useState<LandlordProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   useEffect(() => {
-    if (properties.length > 0 && id) {
-      const found = properties.find(p => p.id === id);
-      setProperty(found || null);
-    }
-  }, [properties, id]);
+    const fetchPropertyAndLandlord = async () => {
+      if (!id) return;
+      try {
+        // Fetch Property
+        const propertyDoc = await getDoc(doc(db, 'properties', id));
+        if (propertyDoc.exists()) {
+          const propData = { id: propertyDoc.id, ...propertyDoc.data() } as Property;
+          setProperty(propData);
+
+          // Fetch Landlord Profile
+          if (propData.landlordId) {
+            const landlordDoc = await getDoc(doc(db, 'users', propData.landlordId));
+            if (landlordDoc.exists()) {
+              setLandlord(landlordDoc.data() as LandlordProfile);
+            }
+          }
+        } else {
+          toast.error('Property not found');
+        }
+      } catch (error) {
+        console.error("Error fetching details:", error);
+        toast.error('Failed to load property details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPropertyAndLandlord();
+  }, [id]);
 
   if (loading) return (
     <div className="bg-background-light dark:bg-background-dark font-sans text-gray-800 dark:text-gray-100 transition-colors duration-300 antialiased min-h-screen flex flex-col md:flex-row">
@@ -36,6 +86,7 @@ export const PropertyDetails = () => {
           <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Property not found</h2>
           <p className="text-gray-500 dark:text-gray-400">The property you are looking for does not exist or has been removed.</p>
+          <button onClick={() => navigate('/explore')} className="mt-4 text-primary hover:underline">Back to Explore</button>
         </div>
       </main>
     </div>
@@ -77,9 +128,9 @@ export const PropertyDetails = () => {
             {/* Image Gallery */}
             <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
               <div className="relative h-[400px] w-full">
-                <img alt={property.title} className="w-full h-full object-cover" src={property.images[0]} />
+                <img alt={property.title} className="w-full h-full object-cover" src={property.images?.[0] || 'https://via.placeholder.com/800x400?text=No+Image'} />
                 <span className="absolute top-4 left-4 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide shadow-md">
-                  For {property.type}
+                  For Rent
                 </span>
                 <button className="absolute bottom-4 right-4 bg-white/90 dark:bg-black/70 backdrop-blur text-gray-800 dark:text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2 hover:bg-white dark:hover:bg-black transition-colors">
                   <span className="material-symbols-outlined text-sm">grid_view</span>
@@ -87,13 +138,13 @@ export const PropertyDetails = () => {
                 </button>
               </div>
               <div className="grid grid-cols-4 gap-2 p-2 bg-gray-50 dark:bg-gray-800/50">
-                 {property.images.slice(0, 4).map((img, idx) => (
+                 {property.images?.slice(0, 4).map((img, idx) => (
                     <div key={idx} className="h-24 rounded-lg overflow-hidden cursor-pointer ring-2 ring-transparent hover:ring-primary transition-all">
                         <img alt={`View ${idx}`} className="w-full h-full object-cover" src={img} />
                     </div>
                  ))}
                  {/* Fallback duplicates for layout if single image */}
-                 {[...Array(Math.max(0, 4 - property.images.length))].map((_, idx) => (
+                 {[...Array(Math.max(0, 4 - (property.images?.length || 0)))].map((_, idx) => (
                     <div key={idx + 4} className="h-24 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700"></div>
                  ))}
               </div>
@@ -112,13 +163,13 @@ export const PropertyDetails = () => {
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 flex items-center gap-1 text-sm">
                     <span className="material-symbols-outlined text-sm">location_on</span>
-                    {property.location}
+                    {property.address}, {property.city}, {property.state}
                   </p>
                 </div>
                 <div className="text-right">
                   <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-2xl font-bold px-4 py-2 rounded-lg border border-green-200 dark:border-green-800">
                     ₦{(property.price / 1000000).toFixed(1)}M
-                    {property.period && <span className="text-sm font-normal text-gray-500">/{property.period}</span>}
+                    <span className="text-sm font-normal text-gray-500">/yr</span>
                   </span>
                 </div>
               </div>
@@ -151,6 +202,15 @@ export const PropertyDetails = () => {
                         <span className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Sqm</span>
                     </div>
                   </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
+                      <span className="material-symbols-outlined">home</span>
+                    </div>
+                    <div>
+                        <span className="block text-xl font-bold text-gray-900 dark:text-white">{property.propertyType}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Type</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -158,56 +218,65 @@ export const PropertyDetails = () => {
             {/* Description */}
             <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">About this Property</h2>
-              <div className="prose prose-blue prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-300">
-                <p>
-                  Newly built contemporary 5 bedroom fully detached duplex with a BQ sitting on 650sqm of land in the serene and secure neighborhood of Old Bodija, Ibadan. This property features a spacious living room with high ceilings, a fully fitted modern kitchen, all rooms ensuite with walk-in closets, and a private cinema room.
-                </p>
-                <p className="mt-2">
-                  The exterior boasts ample parking space for up to 4 cars, a gatehouse, and a landscaped garden. Perfect for a family looking for luxury and comfort in a prime location.
-                </p>
+              <div className="prose prose-blue prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                {property.description}
               </div>
             </div>
 
             {/* Amenities */}
-            <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Amenities & Features</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6">
-                {[
-                    '24/7 Power Supply', 'Swimming Pool', 'CCTV Security', 
-                    'Fitted Kitchen', 'Boys Quarter', 'Water Treatment',
-                    'Cinema Room', 'Smart Home Features'
-                ].map((amenity) => (
-                    <div key={amenity} className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                        <span className="material-symbols-outlined text-green-500 text-sm">check_circle</span>
-                        <span className="text-sm">{amenity}</span>
-                    </div>
-                ))}
+            {property.amenities && property.amenities.length > 0 && (
+              <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Amenities & Features</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6">
+                  {property.amenities.map((amenity) => (
+                      <div key={amenity} className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                          <span className="material-symbols-outlined text-green-500 text-sm">check_circle</span>
+                          <span className="text-sm">{amenity}</span>
+                      </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Right Sidebar: Agent/Landlord Info */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700 sticky top-4">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 border-2 border-white dark:border-gray-700 shadow-sm">
-                  <span className="material-symbols-outlined text-3xl">person</span>
-                </div>
+                {landlord?.photoURL ? (
+                  <img src={landlord.photoURL} alt={landlord.displayName} className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-sm" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 border-2 border-white dark:border-gray-700 shadow-sm">
+                    <span className="material-symbols-outlined text-3xl">person</span>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Listed by</p>
-                  <h3 className="font-bold text-gray-900 dark:text-white text-lg">Landlord</h3>
+                  <h3 className="font-bold text-gray-900 dark:text-white text-lg">{landlord?.displayName || 'Landlord'}</h3>
                   <p className="text-xs text-primary dark:text-blue-400 font-medium">Verified Owner</p>
                 </div>
               </div>
               <div className="space-y-3">
-                <button className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg shadow-blue-500/30 transition-all flex justify-center items-center gap-2">
+                <button 
+                  onClick={() => {
+                    if (landlord?.phoneNumber) {
+                      window.location.href = `tel:${landlord.phoneNumber}`;
+                    } else {
+                      toast.info('Phone number not provided by landlord');
+                    }
+                  }}
+                  className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg shadow-blue-500/30 transition-all flex justify-center items-center gap-2"
+                >
                   <span className="material-symbols-outlined">call</span>
                   Contact Landlord
                 </button>
-                   <a href='/landlord/1' className="w-full bg-white dark:bg-transparent border-2 border-primary text-primary dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-semibold py-3 px-4 rounded-lg transition-all flex justify-center items-center gap-2">
+                <button 
+                  onClick={() => navigate(`/landlord/${property.landlordId}`)}
+                  className="w-full bg-white dark:bg-transparent border-2 border-primary text-primary dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-semibold py-3 px-4 rounded-lg transition-all flex justify-center items-center gap-2"
+                >
                    <span className="material-symbols-outlined">person</span>
                    View Landlord Profile
-                </a>
+                </button>
                 <button 
                   onClick={() => setIsReviewOpen(true)}
                   className="w-full bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold py-3 px-4 rounded-lg transition-all flex justify-center items-center gap-2 border border-gray-200 dark:border-gray-600"
@@ -252,8 +321,8 @@ export const PropertyDetails = () => {
       <ReviewModal 
         isOpen={isReviewOpen} 
         onClose={() => setIsReviewOpen(false)} 
-        landlordName="Landlord"
-        landlordImage=""
+        landlordName={landlord?.displayName || "Landlord"}
+        landlordImage={landlord?.photoURL || ""}
       />
     </div>
   );

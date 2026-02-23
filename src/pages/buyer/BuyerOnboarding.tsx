@@ -1,10 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { updateProfile } from 'firebase/auth';
+import { db, storage } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -64,7 +66,7 @@ const LocationMarker = ({ position, setPosition, onLocationSelect }: any) => {
 
 export const BuyerOnboarding = () => {
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
+    const { currentUser, firebaseUser } = useAuth();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [mapCenter, setMapCenter] = useState(defaultCenter);
@@ -72,6 +74,23 @@ export const BuyerOnboarding = () => {
 
     const [mapCenterStep2, setMapCenterStep2] = useState(defaultCenter);
     const [markerPositionStep2, setMarkerPositionStep2] = useState<{lat: number, lng: number} | null>(null);
+
+    // Photo Upload State
+    const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            if (file.size > 2 * 1024 * 1024) {
+                toast.error('File size must be less than 2MB');
+                return;
+            }
+            setProfilePhoto(file);
+            setPhotoPreview(URL.createObjectURL(file));
+        }
+    };
 
     const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
         try {
@@ -180,14 +199,26 @@ export const BuyerOnboarding = () => {
     };
 
     const onStep2Submit = async (data: Step2Values) => {
-        if (!currentUser || !step1Data) return;
+        if (!currentUser || !firebaseUser || !step1Data) return;
         
         setIsSubmitting(true);
         try {
+            let photoURL = currentUser.photoURL;
+
+            if (profilePhoto) {
+                const photoRef = ref(storage, `users/${currentUser.uid}/profilePhoto`);
+                await uploadBytes(photoRef, profilePhoto);
+                photoURL = await getDownloadURL(photoRef);
+                
+                // Update Auth Profile
+                await updateProfile(firebaseUser, { photoURL });
+            }
+
             const userRef = doc(db, 'users', currentUser.uid);
             await updateDoc(userRef, {
                 phoneNumber: step1Data.phone,
                 location: step1Data.currentAddress,
+                photoURL: photoURL,
                 preferences: {
                     moveInDate: step1Data.moveInDate,
                     preferredLocation: data.location,
@@ -234,13 +265,13 @@ export const BuyerOnboarding = () => {
             </div>
 
             {/* Logo - Sitting directly on the page */}
-            <div className="absolute top-8 left-8 z-20 flex items-center gap-3">
-                 <img src="/icon.png" alt="EasyBuy Logo" className="h-10 w-auto" />
-                 <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">EasyBuy</span>
+            <div className="absolute top-4 left-4 md:top-8 md:left-8 z-20 flex items-center gap-3">
+                 <img src="/icon.png" alt="EasyBuy Logo" className="h-8 md:h-10 w-auto" />
+                 <span className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">EasyBuy</span>
             </div>
 
             {/* Stepper Progress (Simple dots or bar) */}
-            <div className="mb-12 z-10 w-full max-w-lg">
+            <div className="mb-8 md:mb-12 mt-16 md:mt-0 z-10 w-full max-w-lg px-4">
                 <div className="flex items-center justify-between relative">
                     <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 dark:bg-gray-700 -z-10"></div>
                      {/* Step 1 Indicator */}
@@ -277,6 +308,38 @@ export const BuyerOnboarding = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* Left Column: Form Fields */}
                             <div className="space-y-6">
+                                {/* Profile Photo Upload */}
+                                <div className="flex flex-col items-center sm:items-start space-y-4">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Profile Photo</label>
+                                    <div className="flex items-center space-x-6">
+                                        <div className="shrink-0">
+                                            {photoPreview ? (
+                                                <img className="h-24 w-24 object-cover rounded-full border-4 border-primary/20" src={photoPreview} alt="Current profile photo" />
+                                            ) : (
+                                                <div className="h-24 w-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border-4 border-dashed border-gray-300 dark:border-gray-600">
+                                                    <span className="material-symbols-outlined text-4xl text-gray-400">person</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <label className="block">
+                                            <span className="sr-only">Choose profile photo</span>
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                onChange={handlePhotoChange}
+                                                ref={fileInputRef}
+                                                className="block w-full text-sm text-gray-500 dark:text-gray-400
+                                                file:mr-4 file:py-2.5 file:px-4
+                                                file:rounded-full file:border-0
+                                                file:text-sm file:font-semibold
+                                                file:bg-primary/10 file:text-primary
+                                                hover:file:bg-primary/20
+                                                cursor-pointer transition-colors"
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
