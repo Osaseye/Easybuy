@@ -10,10 +10,13 @@ export interface Property {
   id: string;
   title: string;
   location: string;
+  city?: string;
+  state?: string;
   price: number;
   currency: string;
   period?: 'year' | 'month'; // for rent
   type: 'sale' | 'rent';
+  propertyType?: string;
   status: 'active' | 'pending' | 'sold' | 'draft';
   bedrooms: number;
   bathrooms: number;
@@ -22,6 +25,7 @@ export interface Property {
   description?: string;
   images: string[];
   features?: string[];
+  amenities?: string[];
   ownerId?: string;
   createdAt: string;
   views?: number;
