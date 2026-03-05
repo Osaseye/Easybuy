@@ -15,25 +15,33 @@ export const LandingPage = () => {
     <div className="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 font-sans antialiased transition-colors duration-200 min-h-screen">
       <Navbar />
       <main>
-        <Hero />
+        <section id="home">
+          <Hero />
+        </section>
         <RevealOnScroll>
           <SearchSection />
         </RevealOnScroll>
         <RevealOnScroll>
           <Features />
         </RevealOnScroll>
-        <RevealOnScroll>
-          <HowItWorks />
-        </RevealOnScroll>
-        <RevealOnScroll>
-          <FeaturedListings />
-        </RevealOnScroll>
+        <section id="how-it-works">
+          <RevealOnScroll>
+            <HowItWorks />
+          </RevealOnScroll>
+        </section>
+        <section id="featured">
+          <RevealOnScroll>
+            <FeaturedListings />
+          </RevealOnScroll>
+        </section>
         <RevealOnScroll>
           <CallToAction />
         </RevealOnScroll>
-        <RevealOnScroll>
-          <Testimonials />
-        </RevealOnScroll>
+        <section id="testimonials">
+          <RevealOnScroll>
+            <Testimonials />
+          </RevealOnScroll>
+        </section>
       </main>
       <Footer />
     </div>

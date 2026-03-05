@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 // --- Schemas ---
 const step1Schema = z.object({
     title: z.string().min(5, 'Title must be at least 5 characters'),
+    type: z.string().min(1, 'Please select Rent or Sell'),
     propertyType: z.string().min(1, 'Property type is required'),
     price: z.number().min(1000, 'Price must be at least 1000'),
     state: z.string().min(1, 'State is required'),
@@ -86,7 +87,7 @@ export const UploadProperty = () => {
         setStep(3);
     };
 
-    const onFinalSubmit = async () => {
+    const onFinalSubmit = async (status: 'available' | 'draft' = 'available') => {
         if (!currentUser || !step1Data || photos.length === 0) return;
 
         setIsSubmitting(true);
@@ -109,7 +110,7 @@ export const UploadProperty = () => {
                 ...step1Data,
                 images: uploadedUrls,
                 landlordId: currentUser.uid,
-                status: 'available',
+                status: status,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
                 // Add some default amenities for now, or we could add a step for this
@@ -118,11 +119,11 @@ export const UploadProperty = () => {
 
             await addDoc(collection(db, 'properties'), propertyData);
 
-            toast.success('Property listed successfully!');
+            toast.success(`Property ${status === 'draft' ? 'saved as draft' : 'listed successfully'}!`);
             navigate('/landlord/listings');
         } catch (error) {
             console.error('Error uploading property:', error);
-            toast.error('Failed to list property. Please try again.');
+            toast.error('Failed to save property. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -187,6 +188,17 @@ export const UploadProperty = () => {
                                             </div>
                                         </div>
                                         <div className="sm:col-span-3">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="type">Listing Type</label>
+                                            <div className="mt-1">
+                                                <select {...registerStep1('type')} className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md p-3 outline-none border">
+                                                    <option value="">Select Rent or Sell</option>
+                                                    <option value="rent">For Rent</option>
+                                                    <option value="sale">For Sale</option>
+                                                </select>
+                                                {errorsStep1.type && <p className="mt-1 text-sm text-red-500">{errorsStep1.type.message}</p>}
+                                            </div>
+                                        </div>
+                                        <div className="sm:col-span-3">
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="propertyType">Property Type</label>
                                             <div className="mt-1">
                                                 <select {...registerStep1('propertyType')} className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md p-3 outline-none border">
@@ -201,7 +213,7 @@ export const UploadProperty = () => {
                                             </div>
                                         </div>
                                         <div className="sm:col-span-3">
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="price">Price (Yearly)</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="price">Price (₦)</label>
                                             <div className="mt-1 relative rounded-md shadow-sm">
                                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                     <span className="text-gray-500 sm:text-sm">₦</span>
@@ -378,9 +390,14 @@ export const UploadProperty = () => {
                                 <button onClick={() => setStep(2)} disabled={isSubmitting} className="px-6 py-2.5 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 disabled:opacity-50" type="button">
                                     <span className="material-symbols-outlined text-sm">arrow_back</span> Back
                                 </button>
-                                <button onClick={onFinalSubmit} disabled={isSubmitting} className="px-6 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-secondary hover:bg-green-700 flex items-center gap-2 disabled:opacity-50">
-                                    {isSubmitting ? 'Publishing...' : 'Publish Listing'} <span className="material-symbols-outlined text-sm">check_circle</span>
-                                </button>
+                                <div className="flex gap-4">
+                                    <button onClick={() => onFinalSubmit('draft')} disabled={isSubmitting} className="px-6 py-2.5 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 disabled:opacity-50">
+                                        Save as Draft
+                                    </button>
+                                    <button onClick={() => onFinalSubmit('available')} disabled={isSubmitting} className="px-6 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-secondary hover:bg-green-700 flex items-center gap-2 disabled:opacity-50">
+                                        {isSubmitting ? 'Publishing...' : 'Publish Listing'} <span className="material-symbols-outlined text-sm">check_circle</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}

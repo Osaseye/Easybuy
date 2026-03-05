@@ -17,11 +17,11 @@ export const Hero = () => {
               Discover properties that match your lifestyle and budget. From Lekki to Abuja, we use smart data to verify every listing so you can move with peace of mind.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Link to="/#search" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold text-base shadow-xl shadow-blue-600/20 transition-all transform hover:-translate-y-1">
+              <Link to="/register?role=buyer" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold text-base shadow-xl shadow-blue-600/20 transition-all transform hover:-translate-y-1">
                 <span className="material-symbols-outlined text-xl">search</span>
                 Find a Home
               </Link>
-              <Link to="/register" className="flex items-center justify-center gap-2 bg-white/10 md:bg-white dark:bg-surface-dark text-white md:text-gray-800 dark:text-white border border-white/20 md:border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary px-6 py-3 rounded-xl font-bold text-base shadow-sm transition-all hover:bg-white/20 md:hover:bg-gray-50 dark:hover:bg-gray-800 backdrop-blur-sm md:backdrop-blur-none">
+              <Link to="/register?role=landlord" className="flex items-center justify-center gap-2 bg-white/10 md:bg-white dark:bg-surface-dark text-white md:text-gray-800 dark:text-white border border-white/20 md:border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary px-6 py-3 rounded-xl font-bold text-base shadow-sm transition-all hover:bg-white/20 md:hover:bg-gray-50 dark:hover:bg-gray-800 backdrop-blur-sm md:backdrop-blur-none">
                 <span className="material-symbols-outlined text-xl">add_home_work</span>
                 List a Property
               </Link>

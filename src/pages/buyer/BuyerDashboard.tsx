@@ -40,25 +40,34 @@ export const BuyerDashboard = () => {
         setProperties(fetchedProperties);
 
         // Simple Recommendation Logic (Weighted Scoring)
-        // In a real app, this would compare against currentUser.preferences
-        // For now, we'll just sort by a mock score (e.g., prioritize certain cities or types)
-        // Let's say the user prefers 'Lagos' and 'Apartment'
-        const userPreferences = { preferredCity: 'Lagos', preferredType: 'Apartment' };
+        const prefs = (currentUser as any)?.preferences;
         
-        const scoredProperties = fetchedProperties.map(prop => {
-            let score = 0;
-            if (prop.city.toLowerCase().includes(userPreferences.preferredCity.toLowerCase())) score += 5;
-            if (prop.propertyType === userPreferences.preferredType) score += 3;
-            // Add random variance to break ties
-            score += Math.random();
-            return { ...prop, score };
-        });
+        let sortedRecommendations = fetchedProperties;
+        
+        if (prefs) {
+            const scoredProperties = fetchedProperties.map(prop => {
+                let score = 0;
+                // Location match
+                if (prefs.preferredLocation && prop.city?.toLowerCase().includes(prefs.preferredLocation.toLowerCase())) score += 10;
+                // Budget calculation
+                if (prefs.budget && prop.price <= prefs.budget) score += 5;
+                // Property type match
+                if (prefs.propertyTypes && prefs.propertyTypes.includes(prop.propertyType)) score += 5;
+                // Bedrooms match
+                if (prefs.bedrooms && prop.bedrooms >= parseInt(prefs.bedrooms)) score += 3;
+                
+                // Add random variance to break ties
+                score += Math.random();
+                return { ...prop, score };
+            });
 
-        const sortedRecommendations = scoredProperties
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 5); // Top 5
+            // Filter out properties that don't match anything if we have strong preferences
+            sortedRecommendations = scoredProperties
+                .filter(p => p.score > 1) // Only keep matching properties (at least some random noise won't pass this if base score is 0)
+                .sort((a, b) => b.score - a.score);
+        }
 
-        setRecommended(sortedRecommendations);
+        setRecommended(sortedRecommendations.slice(0, 5));
 
       } catch (error) {
         console.error("Error fetching properties:", error);
@@ -68,8 +77,10 @@ export const BuyerDashboard = () => {
       }
     };
 
-    fetchProperties();
-  }, []);
+    if (currentUser) {
+        fetchProperties();
+    }
+  }, [currentUser]);
 
   const filteredProperties = properties.filter(p => {
       if (filter === 'All') return true;

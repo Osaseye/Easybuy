@@ -218,7 +218,7 @@ export const BuyerOnboarding = () => {
             await updateDoc(userRef, {
                 phoneNumber: step1Data.phone,
                 location: step1Data.currentAddress,
-                photoURL: photoURL,
+                photoURL: photoURL || null,
                 preferences: {
                     moveInDate: step1Data.moveInDate,
                     preferredLocation: data.location,

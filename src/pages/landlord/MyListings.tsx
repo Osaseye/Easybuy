@@ -21,6 +21,8 @@ export const MyListings = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
     const [listings, setListings] = useState<Property[]>([]);
+    const [filter, setFilter] = useState<'all' | 'available' | 'draft'>('all');
+    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -81,15 +83,15 @@ export const MyListings = () => {
                 {/* Filters */}
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row gap-4 justify-between items-center">
                     <div className="flex gap-2 bg-gray-100 dark:bg-gray-700/50 p-1 rounded-lg">
-                        <button className="px-4 py-2 bg-white dark:bg-gray-700 rounded-md shadow-sm text-sm font-bold text-gray-900 dark:text-white">All</button>
-                        <button className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">Active</button>
-                        <button className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">Drafts</button>
+                        <button onClick={() => setFilter('all')} className={`px-4 py-2 ${filter === 'all' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'} rounded-md text-sm font-bold transition-colors`}>All</button>
+                        <button onClick={() => setFilter('available')} className={`px-4 py-2 ${filter === 'available' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'} rounded-md text-sm font-medium transition-colors`}>Active</button>
+                        <button onClick={() => setFilter('draft')} className={`px-4 py-2 ${filter === 'draft' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'} rounded-md text-sm font-medium transition-colors`}>Drafts</button>
                     </div>
                     <div className="relative w-full sm:w-auto">
                         <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <span className="material-symbols-outlined text-gray-400">search</span>
                         </span>
-                        <input className="pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent text-gray-900 dark:text-white" placeholder="Search properties..." type="text" />
+                        <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-primary bg-transparent text-gray-900 dark:text-white" placeholder="Search properties..." type="text" />
                     </div>
                 </div>
 
@@ -113,7 +115,10 @@ export const MyListings = () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {listings.map((property) => (
+                        {listings
+                            .filter(p => filter === 'all' ? true : p.status === filter)
+                            .filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                            .map((property) => (
                             <div key={property.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow group">
                                 <div className="relative h-48">
                                     <img 

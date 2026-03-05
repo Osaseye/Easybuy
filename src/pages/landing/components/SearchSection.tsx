@@ -2,7 +2,7 @@ import React from 'react';
 
 export const SearchSection = () => {
   return (
-    <section className="relative z-30 -mt-10 lg:-mt-20 px-4">
+    <section id="search" className="relative z-30 -mt-10 lg:-mt-20 px-4">
       <div className="max-w-5xl mx-auto bg-surface-light dark:bg-surface-dark rounded-2xl shadow-2xl p-6 border border-gray-100 dark:border-gray-800">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -26,9 +26,12 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export const Register = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const defaultRole = searchParams.get('role') === 'landlord' ? 'landlord' : 'buyer';
 
   const {
     register,
@@ -39,9 +42,13 @@ export const Register = () => {
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      role: 'buyer',
+      role: defaultRole,
     },
   });
+
+  useEffect(() => {
+    setValue('role', defaultRole);
+  }, [defaultRole, setValue]);
 
   const selectedRole = watch('role');
 
@@ -251,26 +258,6 @@ export const Register = () => {
                   'Create Account'
                 )}
               </button>
-
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white dark:bg-surface-dark text-gray-500">Or continue with</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button type="button" className="w-full flex items-center justify-center gap-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 text-sm font-medium text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="h-5 w-5" alt="Google" />
-                  Google
-                </button>
-                <button type="button" className="w-full flex items-center justify-center gap-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 text-sm font-medium text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                   <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" className="h-5 w-5" alt="Facebook" />
-                   Facebook
-                </button>
-              </div>
 
               <p className="text-sm font-light text-center text-gray-500 dark:text-gray-400 mt-4">
                 Already have an account? <Link to="/login" className="font-medium text-primary hover:underline dark:text-blue-400">Log in here</Link>

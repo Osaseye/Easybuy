@@ -199,7 +199,7 @@ export const LandlordOnboarding = () => {
             await updateDoc(userRef, {
                 displayName: step1Data.fullName,
                 phoneNumber: step1Data.phoneNumber,
-                photoURL: photoUrl,
+                photoURL: photoUrl || null,
                 ninNumber: step1Data.ninNumber,
                 businessName: step1Data.businessName || '',
                 location: data.address,
@@ -207,7 +207,7 @@ export const LandlordOnboarding = () => {
                     address: data.address,
                     state: data.state,
                     city: data.city,
-                    coordinates: markerPosition
+                    coordinates: markerPosition || null
                 },
                 isOnboardingComplete: true,
             });
