@@ -13,6 +13,7 @@ interface Property {
   city: string;
   state: string;
   propertyType: string;
+  type?: 'rent' | 'sale';
   bedrooms: number;
   bathrooms: number;
   images: string[];
@@ -26,6 +27,7 @@ export const BuyerDashboard = () => {
   const [recommended, setRecommended] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -47,23 +49,58 @@ export const BuyerDashboard = () => {
         if (prefs) {
             const scoredProperties = fetchedProperties.map(prop => {
                 let score = 0;
-                // Location match
-                if (prefs.preferredLocation && prop.city?.toLowerCase().includes(prefs.preferredLocation.toLowerCase())) score += 10;
-                // Budget calculation
-                if (prefs.budget && prop.price <= prefs.budget) score += 5;
-                // Property type match
-                if (prefs.propertyTypes && prefs.propertyTypes.includes(prop.propertyType)) score += 5;
-                // Bedrooms match
-                if (prefs.bedrooms && prop.bedrooms >= parseInt(prefs.bedrooms)) score += 3;
+                let explanations: string[] = [];
+
+                // 1. Location match (Highest Priority)
+                if (prefs.preferredLocation) {
+                    const prefLoc = prefs.preferredLocation.toLowerCase();
+                    if (prop.city?.toLowerCase().includes(prefLoc) || prop.state?.toLowerCase().includes(prefLoc)) {
+                        score += 50; 
+                        explanations.push('Location match');
+                    }
+                }
+
+                // 2. Budget calculation (High Priority)
+                if (prefs.budget) {
+                    const maxBudget = Number(prefs.budget);
+                    if (prop.price <= maxBudget) {
+                        score += 30; // Within budget is great
+                        explanations.push('Within budget');
+                    } else if (prop.price <= maxBudget * 1.2) {
+                        score += 10; // Slightly over budget (20%) is okay
+                        explanations.push('Slightly over budget');
+                    } else {
+                        score -= 20; // Massively over budget is bad
+                    }
+                }
+
+                // 3. Property type match
+                if (prefs.propertyTypes && prefs.propertyTypes.length > 0) {
+                    if (prefs.propertyTypes.includes(prop.propertyType)) {
+                        score += 20;
+                        explanations.push('Preferred type');
+                    }
+                }
+
+                // 4. Bedrooms match
+                if (prefs.bedrooms) {
+                    const prefBeds = parseInt(prefs.bedrooms) || 0;
+                    if (prop.bedrooms === prefBeds) {
+                        score += 15; // Exact match
+                    } else if (prop.bedrooms > prefBeds) {
+                        score += 10; // More bedrooms than needed
+                    }
+                }
                 
-                // Add random variance to break ties
+                // Add tiny random variance to break exact ties and make the feed dynamic
                 score += Math.random();
-                return { ...prop, score };
+                
+                return { ...prop, score, matchReasons: explanations };
             });
 
-            // Filter out properties that don't match anything if we have strong preferences
+            // Filter out properties that don't match any primary criteria (must score over 20)
             sortedRecommendations = scoredProperties
-                .filter(p => p.score > 1) // Only keep matching properties (at least some random noise won't pass this if base score is 0)
+                .filter(p => p.score > 20) 
                 .sort((a, b) => b.score - a.score);
         }
 
@@ -83,11 +120,21 @@ export const BuyerDashboard = () => {
   }, [currentUser]);
 
   const filteredProperties = properties.filter(p => {
-      if (filter === 'All') return true;
-      // Assuming 'For Sale' vs 'For Rent' logic. For now, all are 'For Rent' in our upload form.
-      // We can filter by propertyType instead for demonstration.
-      if (filter === 'Apartment') return p.propertyType === 'Apartment';
-      if (filter === 'House') return p.propertyType === 'House';
+      // Filter by type
+      if (filter !== 'All' && p.propertyType !== filter) return false;
+      
+      // Filter by search query (title, city, state)
+      if (searchQuery) {
+          const lowerQuery = searchQuery.toLowerCase();
+          const matchesTitle = p.title?.toLowerCase().includes(lowerQuery);
+          const matchesCity = p.city?.toLowerCase().includes(lowerQuery);
+          const matchesState = p.state?.toLowerCase().includes(lowerQuery);
+          
+          if (!matchesTitle && !matchesCity && !matchesState) {
+              return false;
+          }
+      }
+      
       return true;
   });
 
@@ -105,7 +152,13 @@ export const BuyerDashboard = () => {
             <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className="relative flex-1 md:w-64">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined">search</span>
-                    <input className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-dark text-gray-900 dark:text-white focus:ring-primary focus:border-primary shadow-sm text-sm outline-none" placeholder="Search location, price..." type="text"/>
+                    <input 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-dark text-gray-900 dark:text-white focus:ring-primary focus:border-primary shadow-sm text-sm outline-none" 
+                        placeholder="Search location, title..." 
+                        type="text"
+                    />
                 </div>
                 <button className="p-2.5 bg-white dark:bg-surface-dark border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 shadow-sm transition-colors flex items-center justify-center">
                     <span className="material-symbols-outlined">tune</span>
@@ -157,7 +210,7 @@ export const BuyerDashboard = () => {
                             </div>
                             <div className="p-4">
                                 <h4 className="font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">{property.title}</h4>
-                                <p className="text-primary font-bold mb-2">₦{property.price.toLocaleString()}/yr</p>
+                                <p className="text-primary font-bold mb-2">₦{property.price.toLocaleString()}{property.type === 'sale' ? '' : '/yr'}</p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-xs">location_on</span>
                                     {property.city}, {property.state}
@@ -207,7 +260,7 @@ export const BuyerDashboard = () => {
                                 <div className="flex justify-between items-start mb-2">
                                     <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">{property.title}</h3>
                                 </div>
-                                <p className="text-xl font-bold text-primary mb-3">₦{property.price.toLocaleString()}/yr</p>
+                                <p className="text-xl font-bold text-primary mb-3">₦{property.price.toLocaleString()}{property.type === 'sale' ? '' : '/yr'}</p>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mb-4">
                                     <span className="material-symbols-outlined text-sm">location_on</span>
                                     {property.city}, {property.state}

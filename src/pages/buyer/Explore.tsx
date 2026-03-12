@@ -49,9 +49,15 @@ export const Explore = () => {
         const matchesType = selectedTypes.some(type => {
           const t = type.toLowerCase();
           if (t === 'flat / apartment') {
-            return property.title?.toLowerCase().includes('flat') || property.title?.toLowerCase().includes('apartment') || property.propertyType?.toLowerCase().includes('apartment');
+            return property.propertyType === 'Apartment' || property.title?.toLowerCase().includes('flat') || property.title?.toLowerCase().includes('apartment');
           }
-          return property.title?.toLowerCase().includes(t) || property.propertyType?.toLowerCase().includes(t);
+          if (t === 'duplex') {
+            return property.propertyType === 'House' || property.title?.toLowerCase().includes('duplex');
+          }
+          if (t === 'bungalow') {
+            return property.propertyType === 'Bungalow' || property.title?.toLowerCase().includes('bungalow');
+          }
+          return property.propertyType?.toLowerCase().includes(t);
         });
         if (!matchesType) return false;
       }
@@ -117,7 +123,7 @@ export const Explore = () => {
         <div className="pb-6 border-b border-gray-100 dark:border-gray-700">
             <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">Property Type</label>
             <div className="space-y-2">
-                {['Flat / Apartment', 'Duplex', 'Terrace', 'Bungalow'].map((type) => (
+                {['Flat / Apartment', 'Duplex', 'Bungalow'].map((type) => (
                     <label key={type} className="flex items-center cursor-pointer">
                         <input 
                             checked={selectedTypes.includes(type)}
@@ -153,7 +159,7 @@ export const Explore = () => {
                 <span className="material-symbols-outlined text-yellow-500 text-lg">bolt</span> Amenities
             </label>
             <div className="space-y-2">
-                {['24/7 Power', 'Gated Estate', 'Swimming Pool', 'Gym'].map((item) => (
+                {['Parking', 'Water Supply', 'Security', '24/7 Power', 'Swimming Pool'].map((item) => (
                     <label key={item} className="flex items-center cursor-pointer">
                         <input 
                             checked={selectedAmenities.includes(item)}
@@ -167,12 +173,14 @@ export const Explore = () => {
             </div>
         </div>
 
-        <button 
-            onClick={() => setIsMobileFilterOpen(false)}
-            className="w-full bg-navy hover:bg-blue-900 text-white py-3 rounded-xl font-bold transition shadow-lg shadow-blue-900/20"
-        >
-            Apply Filters
-        </button>
+        <div className="lg:hidden mt-6">
+            <button 
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="w-full bg-navy hover:bg-blue-900 text-white py-3 rounded-xl font-bold transition shadow-lg shadow-blue-900/20"
+            >
+                Apply Filters
+            </button>
+        </div>
     </div>
   );
 
@@ -317,7 +325,7 @@ export const Explore = () => {
                                         <h4 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">{property.title}</h4>
                                         <p className="text-primary font-bold whitespace-nowrap ml-2">
                                             ₦{(property.price / 1000000).toFixed(1)}M
-                                            <span className="text-xs text-gray-400 font-normal">/{property.period || 'yr'}</span>
+                                            {property.type !== 'sale' && <span className="text-xs text-gray-400 font-normal">/{property.period || 'yr'}</span>}
                                         </p>
                                     </div>
                                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-1">{property.city ? `${property.city}, ${property.state}` : property.location}</p>

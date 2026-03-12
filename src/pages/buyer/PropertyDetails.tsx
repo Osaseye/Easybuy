@@ -169,7 +169,7 @@ export const PropertyDetails = () => {
                 <div className="text-right">
                   <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-2xl font-bold px-4 py-2 rounded-lg border border-green-200 dark:border-green-800">
                     ₦{(property.price / 1000000).toFixed(1)}M
-                    <span className="text-sm font-normal text-gray-500">/yr</span>
+                      {(property as any).type !== 'sale' && <span className="text-sm font-normal text-gray-500">/{(property as any).period || 'yr'}</span>}
                   </span>
                 </div>
               </div>

@@ -366,7 +366,7 @@ export const UploadProperty = () => {
                                     
                                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
                                         <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{step1Data.title}</h4>
-                                        <p className="text-2xl font-bold text-primary mb-4">₦{step1Data.price.toLocaleString()}/yr</p>
+                                        <p className="text-2xl font-bold text-primary mb-4">₦{step1Data.price.toLocaleString()}{step1Data.type === 'sale' ? '' : '/yr'}</p>
                                         
                                         <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
                                             <div><span className="text-gray-500">Type:</span> <span className="font-medium dark:text-white">{step1Data.propertyType}</span></div>
