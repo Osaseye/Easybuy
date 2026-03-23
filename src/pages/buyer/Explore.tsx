@@ -6,7 +6,7 @@ import { useProperties } from '../../hooks/useProperties';
 export const Explore = () => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const navigate = useNavigate();
-  const { properties, loading } = useProperties();
+  const { properties, loading, fetchMore, hasMore } = useProperties();
 
   // Filter States
   const [minPrice, setMinPrice] = useState<string>('');
@@ -295,7 +295,8 @@ export const Explore = () => {
                         <p className="text-gray-500 dark:text-gray-400 max-w-md">Try adjusting your search or filters to find what you're looking for.</p>
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <>
+                        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {filteredProperties.map((property) => (
                             <div 
                                 key={property.id} 
@@ -338,7 +339,20 @@ export const Explore = () => {
                             </div>
                         ))}
                     </div>
-                )}
+                    
+                    {hasMore && (
+                        <div className="mt-8 flex justify-center">
+                            <button
+                                onClick={fetchMore}
+                                disabled={loading}
+                                className="px-6 py-3 bg-primary/10 hover:bg-primary/20 text-primary dark:text-blue-400 font-bold rounded-xl transition-colors disabled:opacity-50"
+                            >
+                                {loading ? 'Loading...' : 'Load More'}
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
             </div>
         </div>
       </main>

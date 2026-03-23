@@ -73,6 +73,9 @@ export const Register = () => {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      
+      // Force token refresh after registration so custom claims are available immediately
+      await user.getIdToken(true);
 
       toast.success('Account created successfully!');
 

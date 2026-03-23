@@ -78,7 +78,11 @@ export const LandlordOnboarding = () => {
 
     const reverseGeocode = async (lat: number, lng: number): Promise<any> => {
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+                headers: {
+                    'User-Agent': 'EasyBuy/1.0 (easybuy.ng; contact@easybuy.ng)'
+                }
+            });
             const data = await response.json();
             return data;
         } catch (error) {

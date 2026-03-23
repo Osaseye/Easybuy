@@ -24,13 +24,9 @@ service firebase.storage {
 
     // Property images
     match /properties/{propertyId}/{allPaths=**} {
-      // Anyone can view property images
       allow read: if true;
-      // Only authenticated users (landlords) can upload property images
-      // Note: We can't easily check Firestore roles from Storage rules without custom claims,
-      // so we rely on the client to only allow landlords to upload, and restrict by auth.
-      allow write: if isAuthenticated() 
-                   && request.resource.size < 10 * 1024 * 1024 // Max 10MB per image
+      allow write: if request.auth.token.role == 'landlord'
+                   && request.resource.size < 10 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
     }
   }

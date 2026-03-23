@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LandlordSidebar } from '../../components/common/LandlordSidebar';
 import { useAuth } from '../../contexts/AuthContext';
-import { db } from '../../lib/firebase';
-import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { db, storage } from '../../lib/firebase';
+import { collection, query, where, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { ref, deleteObject } from 'firebase/storage';
 import { toast } from 'sonner';
 
 interface Property {
@@ -48,15 +49,27 @@ export const MyListings = () => {
     }, [currentUser]);
 
     const handleDelete = async (id: string) => {
-        if(window.confirm('Are you sure you want to delete this listing?')) {
-            try {
-                await deleteDoc(doc(db, 'properties', id));
-                setListings(listings.filter(l => l.id !== id));
-                toast.success('Listing deleted successfully');
-            } catch (error) {
-                console.error("Error deleting listing:", error);
-                toast.error("Failed to delete listing");
-            }
+        if (!window.confirm('Delete this listing and all its photos?')) return;
+        try {
+            // 1. Fetch the property to get image URLs
+            const propDoc = await getDoc(doc(db, 'properties', id));
+            const images: string[] = propDoc.data()?.images || [];
+
+            // 2. Delete each image from Storage
+            await Promise.all(
+                images.map(url => {
+                    const imageRef = ref(storage, url);
+                    return deleteObject(imageRef).catch(() => {}); // ignore if already gone
+                })
+            );
+
+            // 3. Delete Firestore document
+            await deleteDoc(doc(db, 'properties', id));
+            setListings(listings.filter(l => l.id !== id));
+            toast.success('Listing deleted successfully');
+        } catch (error) {
+            console.error("Error deleting listing:", error);
+            toast.error("Failed to delete listing");
         }
     };
 

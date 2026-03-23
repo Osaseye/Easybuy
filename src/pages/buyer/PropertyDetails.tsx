@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Sidebar } from '../../components/common/Sidebar';
+import { useAuth } from '../../contexts/AuthContext';
 import { ReviewModal } from '../../components/common/ReviewModal';
 import { LoadingState } from '../../components/common/LoadingState';
 import { db } from '../../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'sonner';
 
 interface Property {
@@ -37,6 +38,9 @@ export const PropertyDetails = () => {
   const [landlord, setLandlord] = useState<LandlordProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [similarProperties, setSimilarProperties] = useState<Property[]>([]);
+  const { currentUser } = useAuth(); // Import useAuth if not already there! Wait I should check.
 
   useEffect(() => {
     const fetchPropertyAndLandlord = async () => {
@@ -55,8 +59,30 @@ export const PropertyDetails = () => {
               setLandlord(landlordDoc.data() as LandlordProfile);
             }
           }
+          
+          // Fetch Similar Properties
+          if (propData.city && propData.propertyType) {
+            const q = query(
+              collection(db, 'properties'),
+              where('city', '==', propData.city),
+              where('propertyType', '==', propData.propertyType)
+            );
+            const querySnapshot = await getDocs(q);
+            const similar = querySnapshot.docs
+              .map(doc => ({ id: doc.id, ...doc.data() } as Property))
+              .filter(p => p.id !== id)
+              .slice(0, 3);
+            setSimilarProperties(similar);
+          }
         } else {
           toast.error('Property not found');
+        }
+        
+        // Check if property is saved
+        if (currentUser) {
+            const savedDocRef = doc(db, 'savedProperties', `${currentUser.uid}_${id}`);
+            const savedDocSnap = await getDoc(savedDocRef);
+            if (savedDocSnap.exists()) setIsSaved(true);
         }
       } catch (error) {
         console.error("Error fetching details:", error);
@@ -67,7 +93,35 @@ export const PropertyDetails = () => {
     };
 
     fetchPropertyAndLandlord();
-  }, [id]);
+  }, [id, currentUser]);
+
+  const handleSave = async () => {
+      if (!currentUser) {
+          toast.error('Please log in to save properties');
+          return;
+      }
+      if (!property) return;
+      
+      const savedDocRef = doc(db, 'savedProperties', `${currentUser.uid}_${property.id}`);
+      try {
+          if (isSaved) {
+              await deleteDoc(savedDocRef);
+              setIsSaved(false);
+              toast.success('Property removed from saved list!');
+          } else {
+              await setDoc(savedDocRef, {
+                  userId: currentUser.uid,
+                  propertyId: property.id,
+                  savedAt: serverTimestamp(),
+              });
+              setIsSaved(true);
+              toast.success('Property saved!');
+          }
+      } catch (error) {
+          console.error("Error toggling save:", error);
+          toast.error('Failed to update saved properties');
+      }
+  };
 
   if (loading) return (
     <div className="bg-background-light dark:bg-background-dark font-sans text-gray-800 dark:text-gray-100 transition-colors duration-300 antialiased min-h-screen flex flex-col md:flex-row">
@@ -286,9 +340,11 @@ export const PropertyDetails = () => {
                 </button>
               </div>
               <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
-                <button className="w-full flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-colors py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <span className="material-symbols-outlined">favorite_border</span>
-                  Save this Property
+                <button 
+                  onClick={handleSave}
+                  className={`w-full flex items-center justify-center gap-2 transition-colors py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 ${isSaved ? 'text-red-500 hover:text-red-600' : 'text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400'}`}>
+                  <span className="material-symbols-outlined" style={isSaved ? { fontVariationSettings: "'FILL' 1" } : {}}>{isSaved ? 'favorite' : 'favorite_border'}</span>
+                  {isSaved ? 'Saved to Favorites' : 'Save this Property'}
                 </button>
                 <button className="w-full flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-colors py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 mt-2">
                   <span className="material-symbols-outlined">share</span>
@@ -310,11 +366,31 @@ export const PropertyDetails = () => {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Similar Homes You Might Like</h2>
           </div>
-          <div className="w-full bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center">
-            <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">home_work</span>
-            <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No similar homes found</h4>
-            <p className="text-gray-500 dark:text-gray-400 max-w-md">We couldn't find any properties similar to this one at the moment.</p>
-          </div>
+          {similarProperties.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {similarProperties.map(prop => (
+                <div key={prop.id} onClick={() => navigate(`/property/${prop.id}`)} className="cursor-pointer bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow overflow-hidden group">
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img src={prop.images[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'} alt={prop.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">{prop.title}</h3>
+                    <p className="text-primary font-bold mb-2">${prop.price.toLocaleString()}/mo</p>
+                    <div className="flex text-sm text-gray-500 gap-4">
+                      <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">bed</span>{prop.bedrooms}</span>
+                      <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">shower</span>{prop.bathrooms}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="w-full bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center">
+              <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">home_work</span>
+              <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No similar homes found</h4>
+              <p className="text-gray-500 dark:text-gray-400 max-w-md">We couldn't find any properties similar to this one at the moment.</p>
+            </div>
+          )}
         </div>
       </main>
 

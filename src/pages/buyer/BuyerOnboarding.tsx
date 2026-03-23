@@ -39,8 +39,9 @@ type Step1Values = z.infer<typeof step1Schema>;
 
 // Step 2 Schema
 const step2Schema = z.object({
+    intent: z.enum(['rent', 'buy'], { error: 'Please select whether you want to rent or buy' }),
     location: z.string().min(1, 'Please select a preferred location'),
-    budget: z.number().min(1000000, 'Minimum budget is ₦1,000,000'),
+    budget: z.number().min(50000, 'Minimum budget is ₦50,000'),
     propertyTypes: z.array(z.string()).min(1, 'Select at least one property type'),
     bedrooms: z.string().min(1, 'Select number of bedrooms'),
 });
@@ -92,14 +93,21 @@ export const BuyerOnboarding = () => {
         }
     };
 
-    const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+    const reverseGeocode = async (lat: number, lng: number): Promise<{full: string, city: string}> => {
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+                headers: {
+                    'User-Agent': 'EasyBuy/1.0 (easybuy.ng; contact@easybuy.ng)',
+                },
+            });
             const data = await response.json();
-            return data.display_name || `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+            const full = data.display_name || `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+            const city = data.address?.city || data.address?.town || data.address?.county || full;
+            return { full, city };
         } catch (error) {
             console.error("Geocoding error:", error);
-            return `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+            const fallback = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+            return { full: fallback, city: fallback };
         }
     };
 
@@ -125,7 +133,7 @@ export const BuyerOnboarding = () => {
                     setMarkerPosition(pos);
                     
                     const address = await reverseGeocode(pos.lat, pos.lng);
-                    setValueStep1('currentAddress', address, { shouldValidate: true });
+                    setValueStep1('currentAddress', address.full, { shouldValidate: true });
                     toast.success('Location found!');
                 },
                 () => {
@@ -147,6 +155,7 @@ export const BuyerOnboarding = () => {
     } = useForm<Step2Values>({
         resolver: zodResolver(step2Schema),
         defaultValues: {
+            intent: 'rent',
             budget: 25000000,
             propertyTypes: [],
             bedrooms: '2',
@@ -165,7 +174,7 @@ export const BuyerOnboarding = () => {
                     setMarkerPositionStep2(pos);
                     
                     const address = await reverseGeocode(pos.lat, pos.lng);
-                    setValueStep2('location', address, { shouldValidate: true });
+                    setValueStep2('location', address.city, { shouldValidate: true });
                     toast.success('Location found!');
                 },
                 () => {
@@ -181,6 +190,7 @@ export const BuyerOnboarding = () => {
     const watchBudget = watchStep2('budget');
     const watchPropertyTypes = watchStep2('propertyTypes');
     const watchBedrooms = watchStep2('bedrooms');
+    const watchIntent = watchStep2('intent');
 
     const handlePropertyTypeChange = (type: string) => {
         const currentTypes = watchPropertyTypes || [];
@@ -220,6 +230,7 @@ export const BuyerOnboarding = () => {
                 location: step1Data.currentAddress,
                 photoURL: photoURL || null,
                 preferences: {
+                    intent: data.intent,
                     moveInDate: step1Data.moveInDate,
                     preferredLocation: data.location,
                     budget: data.budget,
@@ -433,7 +444,7 @@ export const BuyerOnboarding = () => {
                                             setPosition={setMarkerPosition} 
                                             onLocationSelect={async (latlng: any) => {
                                                 const address = await reverseGeocode(latlng.lat, latlng.lng);
-                                                setValueStep1('currentAddress', address, { shouldValidate: true });
+                                                setValueStep1('currentAddress', address.full, { shouldValidate: true });
                                             }} 
                                         />
                                     </MapContainer>
@@ -463,6 +474,27 @@ export const BuyerOnboarding = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* Left Column: Preferences */}
                             <div className="space-y-8">
+                                {/* Intent (Rent/Buy) */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">I want to</h3>
+                                    <div className="flex gap-4">
+                                        {(['rent', 'buy'] as const).map((type) => (
+                                            <label key={type} className="flex-1 cursor-pointer relative">
+                                                <input 
+                                                    type="radio" 
+                                                    value={type} 
+                                                    className="sr-only"
+                                                    {...registerStep2('intent')}
+                                                />
+                                                <div className={`rounded-xl py-3 text-center border-2 transition-all ${watchIntent === type ? 'bg-primary/10 border-primary text-primary font-bold shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-primary/50'}`}>
+                                                    <span className="capitalize">{type}</span>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {errorsStep2.intent && <p className="mt-1 text-sm text-red-500">{errorsStep2.intent.message}</p>}
+                                </div>
+
                                 {/* Budget */}
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
@@ -598,7 +630,7 @@ export const BuyerOnboarding = () => {
                                             setPosition={setMarkerPositionStep2} 
                                             onLocationSelect={async (latlng: any) => {
                                                 const address = await reverseGeocode(latlng.lat, latlng.lng);
-                                                setValueStep2('location', address, { shouldValidate: true });
+                                                setValueStep2('location', address.city, { shouldValidate: true });
                                             }} 
                                         />
                                     </MapContainer>

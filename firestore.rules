@@ -13,7 +13,7 @@ service cloud.firestore {
     }
     
     function isLandlord() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'landlord';
+      return isAuthenticated() && request.auth.token.role == 'landlord';
     }
 
     // Users collection

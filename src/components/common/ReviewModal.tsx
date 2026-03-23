@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { db } from '../../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface ReviewModalProps {
     isOpen: boolean;
@@ -91,10 +95,24 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                         Cancel
                     </button>
                     <button 
-                        onClick={() => {
-                            // Handle submit logic here
-                            console.log({ rating, feedback });
-                            onClose();
+                        onClick={async () => {
+                            try {
+                                if (rating === 0) {
+                                    toast.error('Please select a rating');
+                                    return;
+                                }
+                                await addDoc(collection(db, 'reviews'), {
+                                    landlordName,
+                                    rating,
+                                    feedback,
+                                    createdAt: serverTimestamp()
+                                });
+                                toast.success('Review submitted successfully');
+                                onClose();
+                            } catch (error) {
+                                console.error('Error submitting review:', error);
+                                toast.error('Failed to submit review');
+                            }
                         }}
                         className="px-6 py-2 rounded-lg font-bold text-white bg-primary hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all"
                     >

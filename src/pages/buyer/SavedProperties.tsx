@@ -60,7 +60,7 @@ export const SavedProperties = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 bg-white dark:bg-surface-dark p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-            <span className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-0">Showing 0 saved properties</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-0">Showing {savedProperties.length} saved properties</span>
             <div className="flex items-center space-x-4">
                 <div className="relative">
                     <select className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-transparent dark:text-white">
@@ -72,14 +72,60 @@ export const SavedProperties = () => {
             </div>
         </div>
 
-        <div className="w-full bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
-            <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">favorite_border</span>
-            <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No saved properties yet</h4>
-            <p className="text-gray-500 dark:text-gray-400 max-w-md mb-6">Properties you save will appear here so you can easily find them later.</p>
-            <button onClick={() => navigate('/explore')} className="bg-primary hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold transition-colors">
-                Explore Properties
-            </button>
-        </div>
+        {savedProperties.length === 0 ? (
+            <div className="w-full bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
+                <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">favorite_border</span>
+                <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No saved properties yet</h4>
+                <p className="text-gray-500 dark:text-gray-400 max-w-md mb-6">Properties you save will appear here so you can easily find them later.</p>
+                <button onClick={() => navigate('/explore')} className="bg-primary hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold transition-colors">
+                    Explore Properties
+                </button>
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {savedProperties.map((property: any) => (
+                    <div 
+                        key={property.id} 
+                        onClick={() => navigate(`/property/${property.id}`)}
+                        className="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-xl transition duration-300 group cursor-pointer relative"
+                    >
+                        <div className="relative h-56 overflow-hidden">
+                            <img alt={property.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" src={property.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'} />
+                            <div className={`absolute top-4 left-4 text-white text-xs font-bold px-3 py-1.5 rounded-md ${property.type === 'sale' ? 'bg-navy' : 'bg-secondary'}`}>
+                                FOR {property.type ? property.type.toUpperCase() : 'RENT'}
+                            </div>
+                            <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                                <span className="material-symbols-outlined text-xs">location_on</span> {property.city || property.location || 'Location'}
+                            </div>
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    // toggleSave(property.id); // TODO: implement remove button
+                                }}
+                                className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md p-2 rounded-full hover:bg-white text-red-500 transition"
+                            >
+                                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                            </button>
+                        </div>
+                        <div className="p-5">
+                            <div className="flex justify-between items-start mb-2">
+                                <h4 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">{property.title}</h4>
+                                <p className="text-primary font-bold whitespace-nowrap ml-2">
+                                    ₦{(property.price / 1000000).toFixed(1)}M
+                                    {property.type !== 'sale' && <span className="text-xs text-gray-400 font-normal">/yr</span>}
+                                </p>
+                            </div>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-1">{property.city ? `${property.city}, ${property.state}` : property.location}</p>
+                            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-4">
+                                <span className="flex items-center gap-1"><span className="material-symbols-outlined text-base">bed</span> {property.bedrooms} Beds</span>
+                                <span className="flex items-center gap-1"><span className="material-symbols-outlined text-base">bathtub</span> {property.bathrooms} Baths</span>
+                                {(property.amenities?.[0] || property.features?.[0]) && <span className="flex items-center gap-1"><span className="material-symbols-outlined text-base">bolt</span> {property.amenities?.[0] || property.features?.[0]}</span>}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )}
       </main>
     </div>
   );

@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../../contexts/AuthContext';
 import { db, storage } from '../../lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'sonner';
 
@@ -92,13 +92,16 @@ export const UploadProperty = () => {
 
         setIsSubmitting(true);
         try {
+            const newPropertyRef = doc(collection(db, 'properties'));
+            const propertyId = newPropertyRef.id;
+
             // 1. Upload Photos
             const uploadedUrls: string[] = [];
             for (let i = 0; i < photos.length; i++) {
                 const file = photos[i];
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${Date.now()}_${i}.${fileExt}`;
-                const photoRef = ref(storage, `properties/${currentUser.uid}/${fileName}`);
+                const photoRef = ref(storage, `properties/${propertyId}/${fileName}`);
                 
                 await uploadBytes(photoRef, file);
                 const url = await getDownloadURL(photoRef);
@@ -117,7 +120,7 @@ export const UploadProperty = () => {
                 amenities: ['Parking', 'Water Supply', 'Security'],
             };
 
-            await addDoc(collection(db, 'properties'), propertyData);
+            await setDoc(newPropertyRef, propertyData);
 
             toast.success(`Property ${status === 'draft' ? 'saved as draft' : 'listed successfully'}!`);
             navigate('/landlord/listings');

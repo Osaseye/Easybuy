@@ -61,8 +61,8 @@ export const LandlordDashboard = () => {
     const activeListingsCount = properties.filter(p => p.status === 'available').length;
     const totalPropertiesCount = properties.length;
     // Mock data for views and inquiries since we don't have those collections yet
-    const totalViews = totalPropertiesCount * 15; 
-    const totalInquiries = totalPropertiesCount * 3;
+const totalViews = '—';
+    const totalInquiries = '—';
 
     return (
         <div className="bg-gray-50 dark:bg-gray-900 min-h-screen font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300 flex flex-col md:flex-row">
@@ -90,17 +90,23 @@ export const LandlordDashboard = () => {
                     {[
                         { label: 'Total Properties', icon: 'home_work', value: totalPropertiesCount },
                         { label: 'Active Listings', icon: 'real_estate_agent', value: activeListingsCount },
-                        { label: 'Total Views', icon: 'visibility', value: totalViews },
-                        { label: 'Total Inquiries', icon: 'chat', value: totalInquiries }
+                        { label: 'Total Views', icon: 'visibility', value: totalViews, note: 'Coming soon' },
+                        { label: 'Total Inquiries', icon: 'chat', value: totalInquiries, note: 'Coming soon' }
                     ].map((stat, idx) => (
-                        <div key={idx} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+                        <div key={idx} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow relative group">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-400">
                                     <span className="material-symbols-outlined">{stat.icon}</span>
                                 </div>
-                                <span className="flex items-center text-xs font-medium text-gray-400 bg-gray-50 dark:bg-gray-700 px-2.5 py-1 rounded-full">
-                                    --
-                                </span>
+                                {stat.note ? (
+                                    <span className="flex items-center text-xs font-medium text-gray-400 bg-gray-50 dark:bg-gray-700 px-2.5 py-1 rounded-full text-center" title={stat.note}>
+                                        {stat.note}
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center text-xs font-medium text-gray-400 bg-gray-50 dark:bg-gray-700 px-2.5 py-1 rounded-full">
+                                        --
+                                    </span>
+                                )}
                             </div>
                             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {loading ? '...' : stat.value}
