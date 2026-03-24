@@ -2,11 +2,18 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../../components/common/Sidebar';
 import { useProperties } from '../../hooks/useProperties';
+import { useSavedPropertyIds } from '../../hooks/useData';
+import { useAuth } from '../../contexts/AuthContext';
+import { db } from '../../lib/firebase';
+import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { toast } from 'sonner';
 
 export const Explore = () => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const navigate = useNavigate();
   const { properties, loading, fetchMore, hasMore } = useProperties();
+  const { savedIds, setSavedIds } = useSavedPropertyIds();
+  const { currentUser } = useAuth();
 
   // Filter States
   const [minPrice, setMinPrice] = useState<string>('');
@@ -27,6 +34,35 @@ export const Explore = () => {
     setSelectedAmenities(prev => 
       prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
     );
+  };
+
+  const handleToggleSave = async (e: React.MouseEvent, propertyId: string) => {
+      e.stopPropagation();
+      if (!currentUser) {
+          toast.error('Please log in to save properties');
+          return;
+      }
+      
+      const isSaved = savedIds.includes(propertyId);
+      const savedDocRef = doc(db, 'savedProperties', `${currentUser.uid}_${propertyId}`);
+      try {
+          if (isSaved) {
+              await deleteDoc(savedDocRef);
+              setSavedIds(prev => prev.filter(id => id !== propertyId));
+              toast.success('Property removed from saved list!');
+          } else {
+              await setDoc(savedDocRef, {
+                  userId: currentUser.uid,
+                  propertyId: propertyId,
+                  savedAt: serverTimestamp(),
+              });
+              setSavedIds(prev => [...prev, propertyId]);
+              toast.success('Property saved!');
+          }
+      } catch (error) {
+          console.error("Error toggling save:", error);
+          toast.error('Failed to update saved properties');
+      }
   };
 
   const filteredProperties = useMemo(() => {
@@ -312,13 +348,12 @@ export const Explore = () => {
                                         <span className="material-symbols-outlined text-xs">location_on</span> {property.city || (property.location && typeof property.location === 'string' ? property.location.split(',')[1]?.trim() : '') || property.location || 'Location'}
                                     </div>
                                     <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            // Handle save
-                                        }}
-                                        className="absolute bottom-4 right-4 bg-white/30 backdrop-blur-md p-2 rounded-full hover:bg-white text-white hover:text-red-500 transition"
+                                        onClick={(e) => handleToggleSave(e, property.id)}
+                                        className={`absolute bottom-4 right-4 backdrop-blur-md p-2 rounded-full transition ${savedIds.includes(property.id) ? 'bg-white text-red-500 hover:bg-white/90' : 'bg-white/30 text-white hover:bg-white hover:text-red-500'}`}
                                     >
-                                        <span className="material-symbols-outlined text-xl">favorite_border</span>
+                                        <span className="material-symbols-outlined text-xl" style={savedIds.includes(property.id) ? { fontVariationSettings: "'FILL' 1" } : {}}>
+                                            {savedIds.includes(property.id) ? 'favorite' : 'favorite_border'}
+                                        </span>
                                     </button>
                                 </div>
                                 <div className="p-5">

@@ -1,9 +1,18 @@
 import React from 'react';
 import { useProperties } from '../../../hooks/useProperties';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export const FeaturedListings = () => {
   const { properties } = useProperties();
   const featuredProperties = properties.slice(0, 3);
+  const navigate = useNavigate();
+
+  const handleSaveClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      toast.info('Please sign in to save properties');
+      setTimeout(() => navigate('/login'), 1500);
+  };
 
   return (
     <section className="py-20 bg-gray-50 dark:bg-gray-900/50">
@@ -22,7 +31,11 @@ export const FeaturedListings = () => {
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featuredProperties.map((property) => (
-            <div key={property.id} className="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-lg border border-gray-100 dark:border-gray-800 hover:shadow-2xl transition duration-300 group cursor-pointer">
+            <div 
+              key={property.id} 
+              onClick={() => navigate(`/property/${property.id}`)}
+              className="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-lg border border-gray-100 dark:border-gray-800 hover:shadow-2xl transition duration-300 group cursor-pointer"
+            >
               <div className="relative h-64 overflow-hidden">
                 <img alt={property.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" src={property.images[0]} />
                 <div className={`absolute top-4 left-4 text-white text-xs font-bold px-3 py-1.5 rounded-md ${property.type === 'sale' ? 'bg-navy' : 'bg-secondary'}`}>
@@ -31,7 +44,10 @@ export const FeaturedListings = () => {
                 <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
                   <span className="material-symbols-outlined text-xs">location_on</span> {property.city || (property.location && typeof property.location === 'string' ? property.location.split(',')[1]?.trim() : '') || property.location || 'Location'}
                 </div>
-                <button className="absolute bottom-4 right-4 bg-white/30 backdrop-blur-md p-2 rounded-full hover:bg-white text-white hover:text-red-500 transition">
+                <button 
+                  onClick={handleSaveClick}
+                  className="absolute bottom-4 right-4 bg-white/30 backdrop-blur-md p-2 rounded-full hover:bg-white text-white hover:text-red-500 transition"
+                >
                   <span className="material-symbols-outlined text-xl">favorite_border</span>
                 </button>
               </div>
@@ -54,9 +70,9 @@ export const FeaturedListings = () => {
           ))}
         </div>
         <div className="mt-8 flex justify-center">
-          <a className="inline-flex items-center gap-2 text-primary font-bold hover:text-blue-700 transition" href="#">
+          <button onClick={() => navigate('/explore')} className="inline-flex items-center gap-2 text-primary font-bold hover:text-blue-700 transition">
             View all listings <span className="material-symbols-outlined text-lg">arrow_forward</span>
-          </a>
+          </button>
         </div>
       </div>
     </section>

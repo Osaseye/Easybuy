@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../../components/common/Sidebar';
 import { useSavedProperties } from '../../hooks/useData';
+import { useAuth } from '../../contexts/AuthContext';
+import { db } from '../../lib/firebase';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { toast } from 'sonner';
 
 export const SavedProperties = () => {
   const navigate = useNavigate();
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
-  const { savedProperties } = useSavedProperties();
+  const { savedProperties, setSavedProperties } = useSavedProperties();
+  const { currentUser } = useAuth();
 
   const toggleCompare = (id: string) => {
     if (selectedForCompare.includes(id)) {
@@ -16,9 +21,26 @@ export const SavedProperties = () => {
       if (selectedForCompare.length < 2) {
         setSelectedForCompare([...selectedForCompare, id]);
       } else {
-        alert("You can only compare 2 properties at a time.");
+        toast.error("You can only compare 2 properties at a time.");
       }
     }
+  };
+
+  const handleRemoveSaved = async (e: React.MouseEvent, propertyId: string) => {
+      e.stopPropagation();
+      if (!currentUser) return;
+      
+      const savedDocRef = doc(db, 'savedProperties', `${currentUser.uid}_${propertyId}`);
+      try {
+          await deleteDoc(savedDocRef);
+          if (setSavedProperties) { // Might be populated by hook
+              setSavedProperties(prev => prev.filter(p => p.id !== propertyId));
+          }
+          toast.success('Property removed from saved list!');
+      } catch (error) {
+          console.error("Error removing saved property:", error);
+          toast.error('Failed to remove property');
+      }
   };
 
   const getCompareProperties = () => {
@@ -98,10 +120,7 @@ export const SavedProperties = () => {
                                 <span className="material-symbols-outlined text-xs">location_on</span> {property.city || property.location || 'Location'}
                             </div>
                             <button 
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    // toggleSave(property.id); // TODO: implement remove button
-                                }}
+                                onClick={(e) => handleRemoveSaved(e, property.id)}
                                 className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md p-2 rounded-full hover:bg-white text-red-500 transition"
                             >
                                 <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>

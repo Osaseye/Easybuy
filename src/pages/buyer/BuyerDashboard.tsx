@@ -87,9 +87,6 @@ export const BuyerDashboard = () => {
                         type="text"
                     />
                 </div>
-                <button className="p-2.5 bg-white dark:bg-surface-dark border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 shadow-sm transition-colors flex items-center justify-center">
-                    <span className="material-symbols-outlined">tune</span>
-                </button>
             </div>
         </div>
 

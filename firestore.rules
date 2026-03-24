@@ -13,7 +13,10 @@ service cloud.firestore {
     }
     
     function isLandlord() {
-      return isAuthenticated() && request.auth.token.role == 'landlord';
+      return isAuthenticated() && (
+        request.auth.token.role == 'landlord' || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'landlord'
+      );
     }
 
     // Users collection
@@ -36,7 +39,10 @@ service cloud.firestore {
 
     // Saved properties (subcollection or separate collection)
     match /savedProperties/{saveId} {
-      allow read, write: if isOwner(resource.data.userId) || isOwner(request.resource.data.userId);
+      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
     }
   }
 }

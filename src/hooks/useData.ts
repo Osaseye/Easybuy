@@ -5,6 +5,40 @@ import { useAuth } from '../contexts/AuthContext';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
+export const useSavedPropertyIds = () => {
+    const [savedIds, setSavedIds] = useState<string[]>([]);
+    const [loadingIds, setLoadingIds] = useState(true);
+    const { currentUser } = useAuth();
+
+    useEffect(() => {
+        const fetchSavedIds = async () => {
+            if (!currentUser) {
+                setSavedIds([]);
+                setLoadingIds(false);
+                return;
+            }
+            try {
+                const q = query(
+                    collection(db, 'savedProperties'),
+                    where('userId', '==', currentUser.uid)
+                );
+                const snapshot = await getDocs(q);
+                
+                const ids = snapshot.docs.map(doc => doc.data().propertyId);
+                setSavedIds(ids);
+            } catch (error) {
+                console.error("Error fetching saved property ids:", error);
+            } finally {
+                setLoadingIds(false);
+            }
+        };
+
+        fetchSavedIds();
+    }, [currentUser]);
+
+    return { savedIds, setSavedIds, loadingIds };
+};
+
 export const useSavedProperties = () => {
     const [savedProperties, setSavedProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
@@ -44,7 +78,7 @@ export const useSavedProperties = () => {
         fetchSaved();
     }, [currentUser]);
 
-    return { savedProperties, loading };
+    return { savedProperties, setSavedProperties, loading };
 };
 
 export const useLandlordListings = () => {

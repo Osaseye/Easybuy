@@ -37,8 +37,17 @@ export const UploadProperty = () => {
     const { register: registerStep1, handleSubmit: handleSubmitStep1, formState: { errors: errorsStep1 } } = useForm<Step1Values>({
         resolver: zodResolver(step1Schema),
         defaultValues: {
+            title: '',
+            type: '',
+            propertyType: '',
+            price: 0,
+            state: '',
+            city: '',
+            address: '',
             bedrooms: 1,
             bathrooms: 1,
+            size: 0,
+            description: '',
         }
     });
     const [step1Data, setStep1Data] = useState<Step1Values | null>(null);

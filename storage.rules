@@ -25,7 +25,7 @@ service firebase.storage {
     // Property images
     match /properties/{propertyId}/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth.token.role == 'landlord'
+      allow write: if isAuthenticated() 
                    && request.resource.size < 10 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
     }
